@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fahn-core.mirosens.com/schema/v1/navigation.json",
+  "title": "NavigationResponseV1",
+  "type": "object",
+  "required": ["menus"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "menus": { "type": "object" }
+  },
+  "additionalProperties": false
+}

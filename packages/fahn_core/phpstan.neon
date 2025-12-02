@@ -1,0 +1,25 @@
+parameters:
+    level: 8
+    paths:
+        - Classes
+        - Tests
+    excludePaths:
+        - Tests/Functional/Fixtures
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    reportUnmatchedIgnoredErrors: false
+    tmpDir: var/phpstan
+    ignoreErrors:
+        # TYPO3 Core specific magic methods
+        - '#Call to an undefined method [a-zA-Z0-9\\_]+::[a-zA-Z]+\(\)#'
+        - '#Access to an undefined property [a-zA-Z0-9\\_]+::\$[a-zA-Z]+#'
+        # Extbase magic methods
+        - '#Method [a-zA-Z0-9\\_]+::[gs]et[A-Z][a-zA-Z]+\(\) should return [a-zA-Z0-9\\_]+ but return statement is missing\.#'
+    includes:
+        - vendor/saschaegerer/phpstan-typo3/extension.neon
+
+
+
+
+
+

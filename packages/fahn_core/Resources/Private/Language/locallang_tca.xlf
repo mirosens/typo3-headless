@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff version="1.0" xmlns:t3="http://typo3.org/schemas/xliff">
+    <file source-language="de" datatype="plaintext" original="EXT:fahn_core/Resources/Private/Language/locallang_tca.xlf">
+        <header>
+            <type>tca</type>
+            <description>Accessibility labels and descriptions for TCA fields</description>
+        </header>
+        <body>
+            <!-- A.7.2: Accessibility-Labels für sys_file_reference -->
+            <trans-unit id="sys_file_reference.tx_is_decorative">
+                <source>Bild ist rein dekorativ</source>
+            </trans-unit>
+            <trans-unit id="sys_file_reference.tx_is_decorative.description">
+                <source>Aktivieren, wenn das Bild keine inhaltliche Bedeutung hat (z.&nbsp;B. abstrakte Hintergründe, rein dekorative Elemente). Bei aktivierter Option wird das Alt-Text-Feld ausgeblendet.</source>
+            </trans-unit>
+            <trans-unit id="sys_file_reference.alternative.description">
+                <source>Beschreiben Sie den Inhalt des Bildes für blinde und sehbehinderte Nutzer. Beispiel: "Eine Person, frontal, neutraler Gesichtsausdruck" oder "Tatortfoto: Straßenszene mit Polizeiabsperrung". Lassen Sie das Feld nur leer, wenn "Bild ist rein dekorativ" aktiviert ist.</source>
+            </trans-unit>
+            
+            <!-- A.7.2: Zusätzliche Beschreibungen für wichtige Felder -->
+            <trans-unit id="tt_content.header.description">
+                <source>Überschrift für die Seite oder das Inhaltselement. Verwenden Sie eine klare, beschreibende Überschrift, die den Inhalt zusammenfasst.</source>
+            </trans-unit>
+            <trans-unit id="tt_content.bodytext.description">
+                <source>Hauptinhalt des Elements. Stellen Sie sicher, dass wichtige Informationen auch ohne visuelle Gestaltung verständlich sind.</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
+
+
+
+
+
+

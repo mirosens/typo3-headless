@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fahn-core.mirosens.com/schema/v1/page.json",
+  "title": "PageResponseV1",
+  "type": "object",
+  "required": ["id", "slug", "locale", "title", "meta", "content"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "slug": { "type": "string" },
+    "locale": { "type": "string" },
+    "title": { "type": "string" },
+    "meta": { "type": "object" },
+    "content": { "type": "array" }
+  },
+  "additionalProperties": false
+}

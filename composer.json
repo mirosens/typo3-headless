@@ -1,0 +1,100 @@
+{
+	"name": "typo3/cms-base-distribution",
+	"description" : "TYPO3 CMS Base Distribution",
+	"license": "GPL-2.0-or-later",
+	"type": "project",
+	"config": {
+		"allow-plugins": {
+			"typo3/class-alias-loader": true,
+			"typo3/cms-composer-installers": true
+		},
+		"platform": {
+			"php": "8.2.0"
+		},
+		"sort-packages": true
+	},
+	"minimum-stability": "dev",
+	"prefer-stable": true,
+	"require": {
+		"fahn/core-fahndung": "@dev",
+		"fahn-core/site-package": "*",
+		"friendsoftypo3/headless": "^4.0",
+		"lcobucci/jwt": "^5.0",
+		"typo3/cms-backend": "^13.4",
+		"typo3/cms-belog": "^13.4",
+		"typo3/cms-beuser": "^13.4",
+		"typo3/cms-core": "^13.4",
+		"typo3/cms-dashboard": "^13.4",
+		"typo3/cms-extbase": "^13.4",
+		"typo3/cms-extensionmanager": "^13.4",
+		"typo3/cms-felogin": "^13.4",
+		"typo3/cms-filelist": "^13.4",
+		"typo3/cms-fluid": "^13.4",
+		"typo3/cms-fluid-styled-content": "^13.4",
+		"typo3/cms-form": "^13.4",
+		"typo3/cms-frontend": "^13.4",
+		"typo3/cms-impexp": "^13.4",
+		"typo3/cms-info": "^13.4",
+		"typo3/cms-install": "^13.4",
+		"typo3/cms-lowlevel": "^13.4",
+		"typo3/cms-reactions": "^13.4",
+		"typo3/cms-recycler": "^13.4",
+		"typo3/cms-redirects": "^13.4",
+		"typo3/cms-reports": "^13.4",
+		"typo3/cms-rte-ckeditor": "^13.4",
+		"typo3/cms-seo": "^13.4",
+		"typo3/cms-setup": "^13.4",
+		"typo3/cms-sys-note": "^13.4",
+		"typo3/cms-tstemplate": "^13.4",
+		"typo3/cms-viewpage": "^13.4",
+		"typo3/cms-webhooks": "^13.4",
+		"typo3/cms-workspaces": "^13.4"
+	},
+	"repositories": [
+		{
+			"type": "path",
+			"url": "./packages/*"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"FahnCore\\Config\\": "config/system/"
+		}
+	},
+	"scripts": {
+		"test": [
+			"@test:fahn_core",
+			"@test:fahn_core_fahndung"
+		],
+		"test:fahn_core": "cd packages/fahn_core && composer test",
+		"test:fahn_core_fahndung": "cd packages/fahn_core_fahndung && composer test",
+		"test:unit": [
+			"@test:unit:fahn_core",
+			"@test:unit:fahn_core_fahndung"
+		],
+		"test:unit:fahn_core": "cd packages/fahn_core && composer test:unit",
+		"test:unit:fahn_core_fahndung": "cd packages/fahn_core_fahndung && composer test:unit",
+		"test:functional": [
+			"@test:functional:fahn_core",
+			"@test:functional:fahn_core_fahndung"
+		],
+		"test:functional:fahn_core": "cd packages/fahn_core && composer test:functional",
+		"test:functional:fahn_core_fahndung": "cd packages/fahn_core_fahndung && composer test:functional",
+		"qa": [
+			"@qa:fahn_core",
+			"@qa:fahn_core_fahndung"
+		],
+		"qa:fahn_core": "cd packages/fahn_core && composer qa",
+		"qa:fahn_core_fahndung": "cd packages/fahn_core_fahndung && composer qa"
+	},
+	"require-dev": {
+		"friendsofphp/php-cs-fixer": "^3.50",
+		"opis/json-schema": "^2.3",
+		"phpstan/phpstan": "^1.10",
+		"phpunit/phpunit": "^11.0",
+		"rector/rector": "^1.0",
+		"saschaegerer/phpstan-typo3": "^1.5",
+		"typo3/coding-standards": "^0.8",
+		"typo3/testing-framework": "^8.0"
+	}
+}

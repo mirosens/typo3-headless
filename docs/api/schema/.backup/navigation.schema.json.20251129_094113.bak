@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fahn-core.mirosens.com/schema/v1/navigation.json",
+  "title": "NavigationResponseV1",
+  "description": "Schema für Hauptnavigation, Footer-Navigation und Utility-Nav",
+  "type": "object",
+  "required": ["menus"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Versionsnummer des Navigation-Schemas"
+    },
+    "menus": {
+      "type": "object",
+      "description": "Container für verschiedene Navigationsmenüs",
+      "properties": {
+        "main": {
+          "type": "array",
+          "description": "Hauptnavigation",
+          "items": {
+            "$ref": "#/$defs/navItem"
+          }
+        },
+        "footer": {
+          "type": "array",
+          "description": "Footer-Navigation",
+          "items": {
+            "$ref": "#/$defs/navItem"
+          }
+        },
+        "utility": {
+          "type": "array",
+          "description": "Service-/Meta-Navigation (z.B. Sprache, A11y-Links)",
+          "items": {
+            "$ref": "#/$defs/navItem"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "navItem": {
+      "type": "object",
+      "required": ["id", "label"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Eindeutige ID des Navigationsitems"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Anzeigetext des Navigationsitems"
+        },
+        "href": {
+          "type": "string",
+          "description": "URL oder Pfad des Navigationsitems"
+        },
+        "external": {
+          "type": "boolean",
+          "default": false,
+          "description": "Gibt an, ob es sich um einen externen Link handelt"
+        },
+        "children": {
+          "type": "array",
+          "description": "Untermenü-Items (v1: max. 2 Ebenen)",
+          "items": {
+            "$ref": "#/$defs/navItemChild"
+          }
+        },
+        "accessibility": {
+          "type": "object",
+          "description": "Accessibility-Metadaten",
+          "properties": {
+            "ariaLabel": {
+              "type": "string",
+              "description": "ARIA-Label für Screenreader"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "navItemChild": {
+      "type": "object",
+      "required": ["id", "label", "href"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Eindeutige ID des Untermenü-Items"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Anzeigetext des Untermenü-Items"
+        },
+        "href": {
+          "type": "string",
+          "description": "URL oder Pfad des Untermenü-Items"
+        },
+        "external": {
+          "type": "boolean",
+          "default": false,
+          "description": "Gibt an, ob es sich um einen externen Link handelt"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,46 @@
+uid,pid,title,root,clear,config,constants
+1,1,Root Template,1,3,"page = PAGE
+page {
+    typeNum = 0
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders = Content-Type:application/json
+    }
+    10 = USER
+    10 {
+        userFunc = FriendsOfTYPO3\Headless\Renderer\JsonRenderer->render
+    }
+}
+
+page_api = PAGE
+page_api {
+    typeNum = 834
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders = Content-Type:application/json
+    }
+    10 = USER
+    10 {
+        userFunc = FriendsOfTYPO3\Headless\Renderer\JsonRenderer->render
+    }
+}
+
+navigation_api = PAGE
+navigation_api {
+    typeNum = 835
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders = Content-Type:application/json
+    }
+    10 = USER
+    10 {
+        userFunc = FriendsOfTYPO3\Headless\Renderer\NavigationRenderer->render
+    }
+}
+",
+
+
+
+
+
+

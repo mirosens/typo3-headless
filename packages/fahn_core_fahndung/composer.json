@@ -1,0 +1,54 @@
+{
+    "name": "fahn/core-fahndung",
+    "type": "typo3-cms-extension",
+    "description": "Fahndungen Domain Model für FAHN-CORE",
+    "license": "proprietary",
+    "require": {
+        "typo3/cms-core": "^13.0",
+        "typo3/cms-extbase": "^13.0"
+    },
+    "require-dev": {
+        "typo3/testing-framework": "^8.0",
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^1.10",
+        "saschaegerer/phpstan-typo3": "^1.5",
+        "rector/rector": "^1.0",
+        "friendsofphp/php-cs-fixer": "^3.50",
+        "typo3/coding-standards": "^0.8",
+        "opis/json-schema": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fahn\\CoreFahndung\\": "Classes/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Fahn\\CoreFahndung\\Tests\\": "Tests/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "@test:unit",
+            "@test:functional"
+        ],
+        "test:unit": "phpunit --testsuite Unit",
+        "test:functional": "phpunit --testsuite Functional",
+        "phpstan": "phpstan analyse",
+        "rector": "rector process --dry-run",
+        "rector:fix": "rector process",
+        "cs:check": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix",
+        "qa": [
+            "@cs:check",
+            "@phpstan",
+            "@test"
+        ]
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "fahn_core_fahndung"
+        }
+    }
+}
+

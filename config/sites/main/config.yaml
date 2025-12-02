@@ -1,0 +1,71 @@
+base: 'https://fahn-core-typo3.ddev.site/'
+dependencies:
+  - friendsoftypo3/headless
+frontendBase: ''
+headless: 1
+languages:
+  - 
+    title: English
+    enabled: true
+    languageId: 0
+    base: /
+    locale: en_US.UTF-8
+    navigationTitle: English
+    flag: us
+rootPageId: 1
+routeEnhancers:
+  # =================================================================
+  # PRODUKTIONSREIFE API-ARCHITEKTUR: REST-konforme Endpunkte
+  # =================================================================
+  # Alle API-Routen nutzen /api/* Pattern für bessere Organisation,
+  # CDN-Caching und Monitoring
+  
+  # Note: Complex route enhancers cause issues with TYPO3 v13
+  # Using reliable typeNum approach instead: /?type=10000, /?type=835, /?type=8999
+
+  # Legacy .json Suffix Support (für Rückwärtskompatibilität)
+  PageTypeSuffix:
+    type: PageType
+    default: ''
+    index: ''
+    map:
+      '.json': 9999
+
+  # Fahndungen-Detail-Routen (öffentlich)
+  FahndungenDetail:
+    type: Simple
+    routePath: '/fahndungen/{slug}'
+    defaults:
+      pageId: 1
+      controller: 'Fahndung'
+      action: 'show'
+    requirements:
+      slug: '^[a-zA-Z0-9\-_]+$'
+    _arguments:
+      slug: slug
+      
+  # API-Fahndung-Detail (für Frontend)
+  FahndungDetailAPI:
+    type: Simple  
+    routePath: '/api/fahndungen/{slug}'
+    defaults:
+      pageId: 1
+      type: '837'
+    requirements:
+      slug: '^[a-zA-Z0-9\-_]+$'
+
+websiteTitle: ''
+
+# HINWEIS: Error-Handler-Konfiguration für Headless
+# In einem reinen Headless-Setup wird die 404-Fehlerbehandlung über TypoScript (typeNum 838)
+# und Middleware gehandhabt, nicht über die Site-Konfiguration.
+# Die Standard-TYPO3-Fehlerbehandlung wird verwendet, und typeNum 838 rendert JSON.
+# 
+# Falls eine spezielle 404-Seite benötigt wird, kann hier eine Page-ID konfiguriert werden:
+# errorHandling:
+#   -
+#     errorCode: '404'
+#     errorHandler: Page
+#     errorContentSource: 't3://page?uid=1'  # Page-ID, nicht typeNum!
+# 
+# Für Headless ist es jedoch besser, die Fehlerbehandlung über TypoScript zu steuern.

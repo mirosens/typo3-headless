@@ -1,0 +1,13 @@
+.DS_Store
+.idea
+nbproject
+/var/*
+!/var/labels
+/vendor
+/public/*
+!/public/.htaccess
+
+# Security: JWT Private Keys
+.ddev/secrets/jwt-private.pem
+*.pem
+!config/jwt-public.pem

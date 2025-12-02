@@ -1,0 +1,61 @@
+{
+    "name": "fahn-core/site-package",
+    "description": "FAHN-CORE Site Package for TYPO3 Headless",
+    "type": "typo3-cms-extension",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "typo3/cms-core": "^13.4",
+        "friendsoftypo3/headless": "^4.0"
+    },
+    "require-dev": {
+        "typo3/testing-framework": "^8.0",
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^1.10",
+        "saschaegerer/phpstan-typo3": "^1.5",
+        "rector/rector": "^1.0",
+        "friendsofphp/php-cs-fixer": "^3.50",
+        "typo3/coding-standards": "^0.8",
+        "opis/json-schema": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vendor\\FahnCore\\": "Classes/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Vendor\\FahnCore\\Tests\\": "Tests/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "@test:unit",
+            "@test:functional"
+        ],
+        "test:unit": "../../vendor/bin/phpunit --configuration phpunit.xml --testsuite unit",
+        "test:functional": "../../vendor/bin/phpunit --configuration phpunit.xml --testsuite functional",
+        "test:coverage": "../../vendor/bin/phpunit --configuration phpunit.xml --coverage-html var/coverage",
+        "phpstan": "../../vendor/bin/phpstan analyse --configuration phpstan.neon",
+        "phpstan:baseline": "../../vendor/bin/phpstan analyse --configuration phpstan.neon --generate-baseline",
+        "rector": "../../vendor/bin/rector process --config rector.php --dry-run",
+        "rector:fix": "../../vendor/bin/rector process --config rector.php",
+        "cs:check": "../../vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff",
+        "cs:fix": "../../vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php",
+        "qa": [
+            "@cs:check",
+            "@phpstan",
+            "@test"
+        ],
+        "qa:fix": [
+            "@cs:fix",
+            "@rector:fix"
+        ]
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "fahn_core"
+        }
+    }
+}
+
+

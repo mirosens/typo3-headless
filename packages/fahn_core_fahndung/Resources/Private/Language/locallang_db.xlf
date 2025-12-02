@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0" xmlns:t3="http://typo3.org/schemas/xliff">
+    <file source-language="de" datatype="plaintext" original="EXT:fahn_core_fahndung/Resources/Private/Language/locallang_db.xlf">
+        <header>
+            <type>database</type>
+            <description>Language labels for database fields</description>
+        </header>
+        <body>
+            <trans-unit id="tx_fahncorefahndung_domain_model_fahndung">
+                <source>Fahndung</source>
+            </trans-unit>
+            <trans-unit id="tx_fahncorefahndung_domain_model_fahndung.title">
+                <source>Titel</source>
+            </trans-unit>
+            <trans-unit id="tx_fahncorefahndung_domain_model_fahndung.description">
+                <source>Beschreibung</source>
+            </trans-unit>
+            <trans-unit id="tx_fahncorefahndung_domain_model_fahndung.case_id">
+                <source>Fallnummer</source>
+            </trans-unit>
+            <trans-unit id="tx_fahncorefahndung_domain_model_fahndung.categories">
+                <source>Kategorien</source>
+            </trans-unit>
+            <trans-unit id="tx_fahncorefahndung_domain_model_fahndung.images">
+                <source>Bilder</source>
+            </trans-unit>
+            <trans-unit id="tx_fahncorefahndung_domain_model_fahndung.date_of_crime">
+                <source>Tatdatum/-zeitpunkt</source>
+            </trans-unit>
+            <trans-unit id="tx_fahncorefahndung_domain_model_fahndung.location">
+                <source>Tatort</source>
+            </trans-unit>
+            <trans-unit id="tx_fahncorefahndung_domain_model_fahndung.is_published">
+                <source>Veröffentlicht</source>
+            </trans-unit>
+            <trans-unit id="tabs.details">
+                <source>Details</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
+
+
+
+
+
+

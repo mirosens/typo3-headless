@@ -1,0 +1,37 @@
+{
+  "defaults": {
+    "standard": "WCAG2AA",
+    "runners": ["axe", "htmlcs"],
+    "timeout": 30000,
+    "wait": 1000,
+    "chromeLaunchConfig": {
+      "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+    }
+  },
+  "urls": [
+    {
+      "url": "http://localhost:3000/",
+      "actions": [
+        "wait for element #main-content to be visible"
+      ]
+    },
+    {
+      "url": "http://localhost:3000/fahndungen",
+      "actions": [
+        "wait for element #main-content to be visible"
+      ]
+    },
+    {
+      "url": "http://localhost:3000/kontakt",
+      "actions": [
+        "wait for element #main-content to be visible"
+      ]
+    }
+  ]
+}
+
+
+
+
+
+

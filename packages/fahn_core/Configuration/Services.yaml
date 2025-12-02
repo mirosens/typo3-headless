@@ -1,0 +1,20 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  Vendor\FahnCore\Hooks\CacheInvalidationHook:
+    public: true
+    tags:
+      - name: event.listener
+        identifier: 'fahn-core/cache-invalidation'
+        event: TYPO3\CMS\Core\Cache\Event\CacheFlushEvent
+        method: 'clearCachePostProc'
+
+  # A.7.5.1: Accessibility-Audit Command
+  Vendor\FahnCore\Command\AccessibilityAuditCommand:
+    tags:
+      - name: console.command
+        command: 'fahn-core:accessibility:audit'
+        description: 'Prüft alle Bildreferenzen auf WCAG 2.2-konforme Alt-Texte'
+

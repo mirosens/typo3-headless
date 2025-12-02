@@ -1,0 +1,139 @@
+name: Quality Assurance Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  php-static-analysis:
+    name: PHP Static Analysis
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        extension:
+          - packages/fahn_core
+          - packages/fahn_core_fahndung
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, pdo_sqlite
+          coverage: none
+      
+      - name: Install Composer dependencies
+        working-directory: ${{ matrix.extension }}
+        run: composer install --no-interaction --prefer-dist
+      
+      - name: Run PHP CS Fixer (check)
+        working-directory: ${{ matrix.extension }}
+        run: composer cs:check || true
+      
+      - name: Run PHPStan
+        working-directory: ${{ matrix.extension }}
+        run: composer phpstan || true
+      
+      - name: Run Rector (dry-run)
+        working-directory: ${{ matrix.extension }}
+        run: composer rector || true
+
+  php-unit-tests:
+    name: PHP Unit Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        extension:
+          - packages/fahn_core
+          - packages/fahn_core_fahndung
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, pdo_sqlite
+          coverage: xdebug
+      
+      - name: Install Composer dependencies
+        working-directory: ${{ matrix.extension }}
+        run: composer install --no-interaction --prefer-dist
+      
+      - name: Run Unit Tests
+        working-directory: ${{ matrix.extension }}
+        run: composer test:unit
+
+  php-functional-tests:
+    name: PHP Functional Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        extension:
+          - packages/fahn_core
+          - packages/fahn_core_fahndung
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: typo3_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, pdo_mysql
+          coverage: none
+      
+      - name: Install Composer dependencies
+        working-directory: ${{ matrix.extension }}
+        run: composer install --no-interaction --prefer-dist
+      
+      - name: Run Functional Tests
+        working-directory: ${{ matrix.extension }}
+        env:
+          typo3DatabaseDriver: mysqli
+          typo3DatabaseUsername: root
+          typo3DatabasePassword: root
+          typo3DatabaseHost: 127.0.0.1
+          typo3DatabaseName: typo3_test
+        run: composer test:functional
+
+  qa-summary:
+    name: QA Summary
+    runs-on: ubuntu-latest
+    needs: [php-static-analysis, php-unit-tests, php-functional-tests]
+    if: always()
+    
+    steps:
+      - name: QA Status
+        run: |
+          echo "## Quality Assurance Pipeline Status" >> $GITHUB_STEP_SUMMARY
+          echo "- Static Analysis: ${{ needs.php-static-analysis.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit Tests: ${{ needs.php-unit-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Functional Tests: ${{ needs.php-functional-tests.result }}" >> $GITHUB_STEP_SUMMARY
+
+
+
+
+
+

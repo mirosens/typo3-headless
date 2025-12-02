@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fahn-core.mirosens.com/schema/v1/page.json",
+  "title": "PageResponseV1",
+  "description": "Schema für Seiteninhalte (z.B. Fahndungs-Detailseite, Informationsseiten, statische Inhalte)",
+  "type": "object",
+  "required": ["id", "slug", "locale", "title", "meta", "content"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Eindeutige Seiten-ID (UUID oder TYPO3-UID als String)"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-/]+$",
+      "description": "URL-freundlicher Pfad der Seite"
+    },
+    "locale": {
+      "type": "string",
+      "pattern": "^[a-z]{2}-[A-Z]{2}$",
+      "description": "Sprachcode im Format ISO 639-1 + ISO 3166-1 (z.B. de-DE)"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Titel der Seite"
+    },
+    "meta": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Meta-Beschreibung für SEO"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Liste von Keywords für SEO"
+        },
+        "ogTitle": {
+          "type": "string",
+          "description": "Open Graph Titel"
+        },
+        "ogImage": {
+          "type": "string",
+          "format": "uri",
+          "description": "Open Graph Bild-URL"
+        },
+        "ogDescription": {
+          "type": "string",
+          "description": "Open Graph Beschreibung"
+        }
+      },
+      "additionalProperties": false
+    },
+    "content": {
+      "type": "array",
+      "description": "Liste von Inhaltselementen (Sections/Blocks)",
+      "items": {
+        "$ref": "#/$defs/contentBlock"
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "description": "Hinweise zu Sprache, Landmarks etc.",
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "Sprache der Seite"
+        },
+        "landmarks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["header", "main", "footer", "nav", "aside", "search"]
+          },
+          "description": "Liste von ARIA-Landmarks"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "contentBlock": {
+      "type": "object",
+      "required": ["type", "props"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Typ des Content-Blocks (z.B. hero, section, teaser, gallery)"
+        },
+        "props": {
+          "type": "object",
+          "description": "Eigenschaften des Content-Blocks, abhängig vom Typ"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

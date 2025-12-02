@@ -1,0 +1,17 @@
+# .ddev/docker-compose.redis.yaml
+# Redis Service für FAHN-CORE Performance Layer (PHASE A.5)
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ddev-${DDEV_SITENAME}-redis
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
