@@ -1,0 +1,66 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Fahn\Core\Middleware;
+
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Lcobucci\JWT\Signer\Key\InMemory;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use TYPO3\CMS\Core\Http\JsonResponse;
+
+class JwtAuthMiddleware implements MiddlewareInterface
+{
+    private Configuration $jwtConfig;
+    
+    public function __construct()
+    {
+        $secret = $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? 'change-me-in-production';
+        $this->jwtConfig = Configuration::forSymmetricSigner(
+            new Sha256(),
+            InMemory::plainText($secret)
+        );
+    }
+    
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        $queryParams = $request->getQueryParams();
+        
+        // Protected typeNums: 220 (create), 230 (update), 240 (delete), 300 (media upload), etc.
+        $protectedTypeNums = ['220', '230', '240', '300', '310'];
+        
+        if (isset($queryParams['type']) && in_array($queryParams['type'], $protectedTypeNums, true)) {
+            $authHeader = $request->getHeaderLine('Authorization');
+            
+            if (!preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                return new JsonResponse(['error' => 'Unauthorized'], 401);
+            }
+            
+            try {
+                $token = $this->jwtConfig->parser()->parse($matches[1]);
+                $constraints = $this->jwtConfig->validationConstraints();
+                
+                if (!$this->jwtConfig->validator()->validate($token, ...$constraints)) {
+                    return new JsonResponse(['error' => 'Invalid token'], 401);
+                }
+                
+                // Add user data to request attributes
+                $request = $request->withAttribute('jwt_user', [
+                    'uid' => $token->claims()->get('uid'),
+                    'username' => $token->claims()->get('username'),
+                    'admin' => $token->claims()->get('admin'),
+                ]);
+                
+            } catch (\Exception $e) {
+                return new JsonResponse(['error' => 'Token validation failed'], 401);
+            }
+        }
+        
+        return $handler->handle($request);
+    }
+}
+

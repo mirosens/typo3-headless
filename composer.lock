@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5677e98e6b25f08e0ae9d0f3d07ce17a",
+    "content-hash": "e6b50ece41b3593a264d2dc044950441",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -757,7 +757,7 @@
             "dist": {
                 "type": "path",
                 "url": "./packages/fahn_core",
-                "reference": "a46df5f4f43533dfe7b6aaa917fcca4810da0eb2"
+                "reference": "c04e7fe8e4a8bd1282e079794294574bff7376a0"
             },
             "require": {
                 "friendsoftypo3/headless": "^4.0",
@@ -770,7 +770,6 @@
                 "phpunit/phpunit": "^11.0",
                 "rector/rector": "^1.0",
                 "saschaegerer/phpstan-typo3": "^1.5",
-                "ssch/typo3-rector": "^1.0",
                 "typo3/coding-standards": "^0.8",
                 "typo3/testing-framework": "^8.0"
             },
@@ -796,31 +795,31 @@
                     "@test:functional"
                 ],
                 "test:unit": [
-                    "phpunit --testsuite Unit"
+                    "../../vendor/bin/phpunit --configuration phpunit.xml --testsuite unit"
                 ],
                 "test:functional": [
-                    "phpunit --testsuite Functional"
+                    "../../vendor/bin/phpunit --configuration phpunit.xml --testsuite functional"
                 ],
                 "test:coverage": [
-                    "phpunit --coverage-html var/coverage"
+                    "../../vendor/bin/phpunit --configuration phpunit.xml --coverage-html var/coverage"
                 ],
                 "phpstan": [
-                    "phpstan analyse"
+                    "../../vendor/bin/phpstan analyse --configuration phpstan.neon"
                 ],
                 "phpstan:baseline": [
-                    "phpstan analyse --generate-baseline"
+                    "../../vendor/bin/phpstan analyse --configuration phpstan.neon --generate-baseline"
                 ],
                 "rector": [
-                    "rector process --dry-run"
+                    "../../vendor/bin/rector process --config rector.php --dry-run"
                 ],
                 "rector:fix": [
-                    "rector process"
+                    "../../vendor/bin/rector process --config rector.php"
                 ],
                 "cs:check": [
-                    "php-cs-fixer fix --dry-run --diff"
+                    "../../vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff"
                 ],
                 "cs:fix": [
-                    "php-cs-fixer fix"
+                    "../../vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php"
                 ],
                 "qa": [
                     "@cs:check",
@@ -846,7 +845,7 @@
             "dist": {
                 "type": "path",
                 "url": "./packages/fahn_core_fahndung",
-                "reference": "cf1cdddbfab91fba1f4b439bcb9b4cdb8ae7aa7a"
+                "reference": "fb5f72368528f0b1f3623a376515b175bd9bb7ae"
             },
             "require": {
                 "typo3/cms-core": "^13.0",
@@ -859,7 +858,6 @@
                 "phpunit/phpunit": "^11.0",
                 "rector/rector": "^1.0",
                 "saschaegerer/phpstan-typo3": "^1.5",
-                "ssch/typo3-rector": "^1.0",
                 "typo3/coding-standards": "^0.8",
                 "typo3/testing-framework": "^8.0"
             },

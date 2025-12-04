@@ -16,11 +16,6 @@ return [
                 'typo3/cms-frontend/tsfe',
             ],
         ],
-        'fahn-core/jwt-auth' => [
-            'target' => \Vendor\FahnCore\Middleware\JwtAuthMiddleware::class,
-            'after'  => ['fahn-core/cors'],                  // Nach CORS!
-            'before' => ['typo3/cms-frontend/authentication'], // Vor TYPO3-Auth
-        ],
         'fahn-core/cache-tags' => [
             'target' => \Vendor\FahnCore\Middleware\CacheTagHeaderMiddleware::class,
             'after'  => ['typo3/cms-frontend/tsfe'],

@@ -36,3 +36,17 @@ if (class_exists(\TYPO3\CMS\Core\Log\LogLevel::class)) {
     }
 }
 
+// Register Auth Controller Plugin
+\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+    'FahnCore',
+    'Api',
+    [
+        \Fahn\Core\Controller\Api\AuthController::class => 'login,validate',
+        \Fahn\Core\Controller\Api\DashboardController::class => 'stats',
+    ],
+    [
+        \Fahn\Core\Controller\Api\AuthController::class => 'login,validate',
+        \Fahn\Core\Controller\Api\DashboardController::class => 'stats',
+    ]
+);
+

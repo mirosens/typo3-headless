@@ -1,0 +1,2 @@
+# Include FAHN-CORE API TypoScript Configuration
+@import 'EXT:fahn_core/Configuration/TypoScript/setup.typoscript'
