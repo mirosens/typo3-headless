@@ -50,3 +50,5 @@ $GLOBALS['TCA']['sys_file_reference']['columns']['tx_is_decorative']['descriptio
 
 
 
+
+
