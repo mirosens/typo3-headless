@@ -9,36 +9,66 @@ use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
 /**
- * Fahndung Repository
+ * Das Repository für Fahndungen.
+ *
+ * Verantwortlich für den Zugriff auf die Fahndungs-Entitäten in der Datenbank.
+ * Implementiert spezifische Such- und Filterlogik für die API.
  */
 class FahndungRepository extends Repository
 {
     /**
-     * Findet nur veröffentlichte, aktive Fahndungen
-     * (für öffentliches Frontend / API)
+     * Standard-Sortierung für alle Abfragen, sofern nicht überschrieben.
+     * Sortiert standardmäßig nach Tatdatum absteigend (neueste zuerst).
+     *
+     * @var array<string, string>
+     */
+    protected $defaultOrderings = [
+        'dateOfCrime' => QueryInterface::ORDER_DESCENDING,
+        'crdate' => QueryInterface::ORDER_DESCENDING,
+    ];
+
+    /**
+     * Findet alle veröffentlichten Fahndungen mit Paginierung.
+     *
+     * Diese Methode ist der primäre Einstiegspunkt für die Listenansicht der API.
+     * Sie wendet den 'isPublished'-Filter an und limitiert das Ergebnis für die Paginierung.
      *
      * Beachtet automatisch:
      * - hidden = 0
      * - deleted = 0
      * - starttime <= now
      * - endtime >= now OR endtime = 0
+     *
+     * @param int $limit Die Anzahl der Datensätze pro Seite (SQL LIMIT).
+     * @param int $offset Der Versatz (SQL OFFSET).
+     * @return QueryResultInterface Das Abfrageergebnis (Lazy Loading Proxy).
      */
-    public function findActive(): QueryResultInterface
+    public function findActive(int $limit = 10, int $offset = 0): QueryResultInterface
     {
         $query = $this->createQuery();
         
         // Storage Page wird NICHT eingeschränkt (global suchen)
         $query->getQuerySettings()->setRespectStoragePage(false);
         
-        // Nur veröffentlichte Datensätze
+        // Explizite Einschränkung auf veröffentlichte Datensätze
+        // (Zusätzlich zu den automatischen enableFields wie hidden/deleted)
         $query->matching(
             $query->equals('isPublished', true)
         );
         
-        // Sortierung: Neueste zuerst
+        // Sortierung: Neueste zuerst (deterministisch für Paginierung)
         $query->setOrderings([
+            'dateOfCrime' => QueryInterface::ORDER_DESCENDING,
             'crdate' => QueryInterface::ORDER_DESCENDING,
         ]);
+
+        // Anwendung der Paginierungsparameter direkt auf dem QueryBuilder
+        if ($limit > 0) {
+            $query->setLimit($limit);
+        }
+        if ($offset >= 0) {
+            $query->setOffset($offset);
+        }
         
         return $query->execute();
     }
@@ -72,12 +102,14 @@ class FahndungRepository extends Repository
     }
 
     /**
-     * Findet Fahndungen nach Kategorie-UID
+     * Findet Fahndungen nach Kategorie-UID mit Paginierung.
      *
-     * @param int $categoryUid
+     * @param int $categoryUid Die UID der Kategorie.
+     * @param int $limit Die Anzahl der Datensätze pro Seite (SQL LIMIT).
+     * @param int $offset Der Versatz (SQL OFFSET).
      * @return QueryResultInterface
      */
-    public function findByCategory(int $categoryUid): QueryResultInterface
+    public function findByCategory(int $categoryUid, int $limit = 10, int $offset = 0): QueryResultInterface
     {
         $query = $this->createQuery();
         $query->getQuerySettings()->setRespectStoragePage(false);
@@ -88,6 +120,20 @@ class FahndungRepository extends Repository
                 $query->contains('categories', $categoryUid)
             )
         );
+        
+        // Sortierung: Neueste zuerst
+        $query->setOrderings([
+            'dateOfCrime' => QueryInterface::ORDER_DESCENDING,
+            'crdate' => QueryInterface::ORDER_DESCENDING,
+        ]);
+
+        // Paginierung anwenden
+        if ($limit > 0) {
+            $query->setLimit($limit);
+        }
+        if ($offset >= 0) {
+            $query->setOffset($offset);
+        }
         
         return $query->execute();
     }
@@ -125,6 +171,81 @@ class FahndungRepository extends Repository
         ]);
         
         return $query->execute();
+    }
+
+    /**
+     * Sucht nach Fahndungen anhand eines Suchbegriffs in Titel, Beschreibung und Fall-ID.
+     * Berücksichtigt dabei nur veröffentlichte Datensätze.
+     *
+     * Die Suchlogik kombiniert eine ODER-Verknüpfung der Suchfelder mit einer
+     * UND-Verknüpfung des Veröffentlichungsstatus:
+     * (title LIKE %term% OR description LIKE %term% OR caseId LIKE %term%) AND isPublished = true
+     *
+     * @param string $searchTerm Der Suchbegriff.
+     * @param int $limit Paginierungslimit.
+     * @param int $offset Paginierungsoffset.
+     * @return QueryResultInterface
+     */
+    public function findBySearchTerm(string $searchTerm, int $limit = 10, int $offset = 0): QueryResultInterface
+    {
+        $query = $this->createQuery();
+        $query->getQuerySettings()->setRespectStoragePage(false);
+
+        // 1. Aufbau der Such-Constraints (ODER-Gruppe)
+        // Nutzung von 'like' für Teilstringsuche.
+        // HINWEIS: Wildcards (%) müssen manuell hinzugefügt werden.
+        $searchConstraints = [
+            $query->like('title', '%' . $searchTerm . '%'),
+            $query->like('description', '%' . $searchTerm . '%'),
+            $query->like('caseId', '%' . $searchTerm . '%'),
+        ];
+
+        // 2. Aufbau des Status-Constraints (UND-Gruppe)
+        // Hier kombinieren wir die Suchbedingungen mit dem Veröffentlichungsstatus.
+        // WICHTIG: Nutzung des Spread-Operators (...$searchConstraints) für die 
+        // Kompatibilität mit der variadischen Signatur von logicalOr() in TYPO3 v13.
+        $finalConstraint = $query->logicalAnd(
+            $query->equals('isPublished', true),
+            $query->logicalOr(...$searchConstraints)
+        );
+
+        $query->matching($finalConstraint);
+
+        // 3. Paginierung anwenden
+        if ($limit > 0) {
+            $query->setLimit($limit);
+        }
+        if ($offset >= 0) {
+            $query->setOffset($offset);
+        }
+        
+        // Standard-Sortierung explizit setzen (Sicherheitshalber, falls $defaultOrderings überschrieben würde)
+        $query->setOrderings([
+            'dateOfCrime' => QueryInterface::ORDER_DESCENDING,
+            'crdate' => QueryInterface::ORDER_DESCENDING,
+        ]);
+
+        return $query->execute();
+    }
+
+    /**
+     * Zählt alle veröffentlichten Fahndungen.
+     *
+     * Wird benötigt, um im Frontend die Gesamtanzahl der Seiten zu berechnen.
+     * Führt eine optimierte COUNT(*)-Abfrage aus, ohne Objekte zu hydrieren.
+     *
+     * @return int Die Anzahl der Datensätze.
+     */
+    public function countAll(): int
+    {
+        $query = $this->createQuery();
+        $query->getQuerySettings()->setRespectStoragePage(false);
+        
+        // Gleicher Filter wie bei findActive, aber ohne Limit/Offset
+        $query->matching($query->equals('isPublished', true));
+        
+        // execute()->count() triggert die interne Zähl-Optimierung von Extbase
+        return $query->execute()->count();
     }
 }
 

@@ -4,37 +4,37 @@ declare(strict_types=1);
 
 namespace Fahn\CoreFahndung\Domain\Model;
 
-use TYPO3\CMS\Extbase\Annotation as Extbase;
+use TYPO3\CMS\Extbase\Attribute\Validate;
 use TYPO3\CMS\Extbase\Domain\Model\FileReference;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
 /**
  * Fahndung Domain Model
+ *
+ * Repräsentiert einen Fahndungsfall im System.
+ * Erzwingt strikte Validierungsregeln mittels nativer PHP 8 Attribute
+ * zur Sicherstellung der Datenintegrität vor der Persistierung.
  */
 class Fahndung extends AbstractEntity
 {
     /**
-     * Titel der Fahndung
-     *
-     * @var string
-     * @Extbase\Validate("NotEmpty")
+     * Der Titel des Fahndungsfalls.
+     * Muss zwingend vorhanden sein.
      */
+    #[Validate(['validator' => 'NotEmpty'])]
     protected string $title = '';
 
     /**
-     * Beschreibung (längerer Text)
-     *
-     * @var string
-     * @Extbase\Validate("NotEmpty")
+     * Ausführliche Beschreibung des Falls.
+     * Darf nicht leer sein, da essenziell für die Detailansicht.
      */
+    #[Validate(['validator' => 'NotEmpty'])]
     protected string $description = '';
 
     /**
-     * Eindeutige Fallnummer
-     *
-     * @var string
-     * @Extbase\Validate("NotEmpty")
+     * Aktenzeichen oder interne Fallnummer.
+     * Optional, aber typisiert als String.
      */
     protected string $caseId = '';
 
@@ -53,23 +53,20 @@ class Fahndung extends AbstractEntity
     protected ObjectStorage $images;
 
     /**
-     * Tatdatum/-zeitpunkt
-     *
-     * @var ?\DateTime
+     * Datum und Uhrzeit der Tat.
+     * Validiert auf korrekten DateTime-Typ.
      */
+    #[Validate(['validator' => 'DateTime'])]
     protected ?\DateTime $dateOfCrime = null;
 
     /**
-     * Tatort
-     *
-     * @var string
+     * Ort des Geschehens.
      */
     protected string $location = '';
 
     /**
-     * Veröffentlicht (steuert API-Sichtbarkeit)
-     *
-     * @var bool
+     * Status der Veröffentlichung.
+     * True = Öffentlich sichtbar (Active), False = Entwurf/Archiviert.
      */
     protected bool $isPublished = false;
 
@@ -186,7 +183,7 @@ class Fahndung extends AbstractEntity
         $this->location = $location;
     }
 
-    public function isPublished(): bool
+    public function getIsPublished(): bool
     {
         return $this->isPublished;
     }
