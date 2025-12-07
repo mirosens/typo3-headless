@@ -26,14 +26,6 @@ final class ConfigurationBootstrapper
                     'allowHeaders'   => self::optionalArray($env, 'TYPO3_CORS_ALLOW_HEADERS', ['Content-Type', 'Authorization']),
                     'allowMethods'   => self::optionalArray($env, 'TYPO3_CORS_ALLOW_METHODS', ['GET', 'POST', 'OPTIONS']),
                 ],
-                'jwt' => [
-                    'privateKeyPath' => self::optionalString($env, 'JWT_PRIVATE_KEY_PATH', ''),
-                    'publicKeyPath'  => self::optionalString($env, 'JWT_PUBLIC_KEY_PATH', ''),
-                    'ttl'            => self::optionalInt($env, 'JWT_TTL', 3600),
-                    'refreshTtl'     => self::optionalInt($env, 'JWT_REFRESH_TTL', 604800),
-                    'issuer'         => self::optionalString($env, 'JWT_ISS', 'fahn-core-auth'),
-                    'audience'       => self::optionalString($env, 'JWT_AUD', 'fahn-core-frontend'),
-                ],
                 'csp' => [
                     'defaultSrc' => self::optionalString($env, 'CSP_DEFAULT_SRC', "'none'"),
                     'connectSrc' => self::optionalString($env, 'CSP_CONNECT_SRC', "'self'"),

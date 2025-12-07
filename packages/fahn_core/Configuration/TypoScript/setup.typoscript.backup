@@ -1,0 +1,371 @@
+# ==================================================================
+# PRODUKTIONSREIFE KONFIGURATION: Standard-PAGE für Headless
+# ==================================================================
+# HINWEIS: In strict headless mode (headless: 1), we use the default headless page template
+# The headless extension provides lib.headlessPage which is the correct base
+
+# Use the headless extension's default page configuration
+page < lib.headlessPage
+page {
+    10 = JSON
+    10 {
+        fields {
+            # Simple test content first
+            test = TEXT
+            test.value = Hello World from Headless TYPO3
+            
+            # Page info
+            page = JSON
+            page {
+                fields {
+                    id = TEXT
+                    id.data = TSFE:id
+                    
+                    title = TEXT
+                    title.field = title
+                }
+            }
+            
+            # Content elements
+            content = CONTENT_JSON
+            content {
+                table = tt_content
+                select {
+                    orderBy = sorting
+                    where = {#colPos}=0
+                    languageField = sys_language_uid
+                }
+            }
+        }
+    }
+}
+
+# PRODUKTIONSREIFE KONFIGURATION: lib.page für explizite JSON-Struktur
+# This follows the headless extension's expected structure
+lib.page = JSON
+lib.page {
+    fields {
+        # Standard headless page structure
+        content = CONTENT_JSON
+        content {
+            table = tt_content
+            select {
+                orderBy = sorting
+                where = {#colPos}=0
+                languageField = sys_language_uid
+            }
+        }
+        # Add page metadata
+        meta = JSON
+        meta {
+            fields {
+                title = TEXT
+                title.field = title
+                
+                subtitle = TEXT  
+                subtitle.field = subtitle
+                
+                abstract = TEXT
+                abstract.field = abstract
+                
+                description = TEXT
+                description.field = description
+                
+                keywords = TEXT
+                keywords.field = keywords
+            }
+        }
+    }
+}
+
+# ==================================================================
+# API Libraries for FAHN CORE (A.11)
+# ==================================================================
+
+# Library for Navigation JSON
+lib.navigation = JSON
+lib.navigation {
+    dataProcessing {
+        10 = TYPO3\CMS\Frontend\DataProcessing\MenuProcessor
+        10 {
+            entryLevel = 0
+            levels = 2
+            as = navigationItems
+            dataProcessing {
+                10 = FriendsOfTYPO3\Headless\DataProcessing\MenuProcessor
+                10 {
+                    fields {
+                        id = INT
+                        id.field = uid
+
+                        title = TEXT
+                        title.field = title
+
+                        navTitle = TEXT
+                        navTitle.field = nav_title
+                        navTitle.ifEmpty.field = title
+
+                        link = TEXT
+                        link.typolink.parameter.field = uid
+                        link.typolink.returnLast = url
+
+                        active = BOOL
+                        active.field = active
+                    }
+                }
+            }
+        }
+    }
+    items = TEXT
+    items.data = TSFE:navigationItems
+    items.wrap = |
+}
+
+# Library for Fahndungen List JSON
+lib.fahndungen_list = JSON
+lib.fahndungen_list {
+    items = TEXT
+    items.value = {"items": [{"uid": 1, "title": "Test Fahndung", "path_segment": "test-fahndung"}]}
+    items.wrap = |
+}
+
+# Library for Fahndung Detail JSON
+lib.fahndung_detail = JSON
+lib.fahndung_detail {
+    dataProcessing {
+        10 = TYPO3\CMS\Frontend\DataProcessing\DatabaseQueryProcessor
+        10 {
+            table = tx_fahndungen_domain_model_fahndung
+            where.data = GP:tx_fahncore_pi1[fahndung]
+            where.wrap = path_segment='|'
+            as = fahndung
+            dataProcessing {
+                10 = FriendsOfTYPO3\Headless\DataProcessing\RecordProcessor
+                10 {
+                    fields {
+                        uid = INT
+                        uid.field = uid
+                        title = TEXT
+                        title.field = title
+                        description = TEXT
+                        description.field = description
+                        images = MEDIA
+                        images {
+                            field = assets
+                            renderObj = CONTENT_JSON
+                            renderObj {
+                                fields {
+                                    publicUrl = TEXT
+                                    publicUrl.data = file:current:publicUrl
+                                    alternative = TEXT
+                                    alternative.field = alternative
+                                    title = TEXT
+                                    title.field = title
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    item = TEXT
+    item.data = TSFE:fahndung
+    item.wrap = |
+}
+
+
+# ==================================================================
+# API Endpunkte für Headless JSON-Ausgabe
+# ==================================================================
+
+# ==================================================================
+# PRODUKTIONSREIFE KONFIGURATION: Seiten-JSON (typeNum 834)
+# ==================================================================
+# Direct PAGE configuration to avoid inheritance conflicts
+page_api = PAGE
+page_api {
+    typeNum = 9999
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        debug = 0
+        admPanel = 0
+        cache_period = 3600
+        sendCacheHeaders = 1
+    }
+    10 = JSON
+    10 {
+        fields {
+            # Test field to verify it's working
+            test = TEXT
+            test.value = API Route Working via type=834
+            
+            # Page info
+            page = JSON
+            page {
+                fields {
+                    id = TEXT
+                    id.data = TSFE:id
+                    
+                    title = TEXT
+                    title.field = title
+                }
+            }
+            
+            # Content elements
+            content = CONTENT_JSON
+            content {
+                table = tt_content
+                select {
+                    orderBy = sorting
+                    where = {#colPos}=0
+                    languageField = sys_language_uid
+                }
+            }
+        }
+    }
+}
+
+# A.3.3.2: Navigations-JSON (typeNum 835)
+navigation_api = PAGE
+navigation_api {
+    typeNum = 835
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        sendCacheHeaders = 1
+        debug = 0
+        admPanel = 0
+    }
+    # JSON-Objekt direkt verwenden
+    10 = JSON
+    10 < lib.navigation
+}
+
+# A.3.3.3: Fahndungen-Liste (typeNum 836)
+fahndungen_list_api = PAGE
+fahndungen_list_api {
+    typeNum = 836
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        no_cache = 1
+        sendCacheHeaders = 1
+        debug = 0
+        admPanel = 0
+    }
+    # JSON-Objekt direkt verwenden
+    10 = JSON
+    10 < lib.fahndungen_list
+}
+
+# A.3.3.3: Fahndung-Detail (typeNum 837)
+fahndung_detail_api = PAGE
+fahndung_detail_api {
+    typeNum = 837
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        sendCacheHeaders = 1
+        debug = 0
+        admPanel = 0
+    }
+    # JSON-Objekt direkt verwenden
+    10 = JSON
+    10 < lib.fahndung_detail
+}
+
+# A.11: JSON 404 Not Found (typeNum 838)
+json_404_api = PAGE
+json_404_api {
+    typeNum = 838
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = HTTP/1.1 404 Not Found
+            replace = 1
+        }
+        additionalHeaders.20.header = Content-Type: application/json
+    }
+    10 = TEXT
+    10.value = {"error": "Not Found", "status": 404}
+    10.wrap = |
+}
+
+# ==================================================================
+# PRODUKTIONSREIFE KONFIGURATION: Fahndungen-Liste API (typeNum 10000)
+# ==================================================================
+page_fahndungen_list = PAGE
+page_fahndungen_list {
+    typeNum = 10000
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        debug = 0
+        admPanel = 0
+        no_cache = 1
+        sendCacheHeaders = 1
+    }
+    10 = JSON
+    10 {
+        fields {
+            meta = JSON
+            meta {
+                fields {
+                    total = TEXT
+                    total.value = 3
+                    # TODO: Später durch echte DB-Query ersetzen
+                    
+                    page = TEXT
+                    page.value = 1
+                    
+                    pageSize = TEXT
+                    pageSize.value = 10
+                    
+                    lastUpdated = TEXT
+                    lastUpdated.data = date:U
+                }
+            }
+            
+            items = TEXT
+            items.value = [{"id": "1", "title": "Vermisste Person: Max Mustermann", "type": "missing_person", "status": "active", "publishedAt": "2025-12-01T10:00:00Z", "slug": "max-mustermann-vermisst", "summary": "Seit 30.11.2025 wird Max Mustermann vermisst. Letzte Sichtung am Hauptbahnhof.", "description": "Seit 30.11.2025 wird Max Mustermann vermisst. Letzte Sichtung am Hauptbahnhof."}, {"id": "2", "title": "Zeugenaufruf: Verkehrsunfall B123", "type": "witness_appeal", "status": "active", "publishedAt": "2025-11-29T14:30:00Z", "slug": "verkehrsunfall-b123-zeugenaufruf", "summary": "Gesucht werden Zeugen eines Verkehrsunfalls auf der B123 am 28.11.2025.", "description": "Gesucht werden Zeugen eines Verkehrsunfalls auf der B123 am 28.11.2025."}, {"id": "3", "title": "Fahndung nach Einbruch in Musterstadt", "type": "wanted", "status": "active", "publishedAt": "2025-11-28T09:15:00Z", "slug": "einbruch-musterstadt-fahndung", "summary": "Nach einem Einbruch in der Musterstraße werden Hinweise zu verdächtigen Personen gesucht.", "description": "Nach einem Einbruch in der Musterstraße werden Hinweise zu verdächtigen Personen gesucht."}]
+        }
+    }
+}
+
+# ==================================================================
+# PRODUKTIONSREIFE KONFIGURATION: Health Check API (typeNum 8999)
+# ==================================================================
+health_check_api = PAGE
+health_check_api {
+    typeNum = 8999
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        debug = 0
+        admPanel = 0
+        no_cache = 1
+        sendCacheHeaders = 0
+    }
+    10 = TEXT
+    10.value = {"status":"healthy","timestamp":"1764663250","version":"1.0.0","services":{"typo3":"ok","database":"ok","cache":"ok"}}
+}

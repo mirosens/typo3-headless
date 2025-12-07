@@ -19,7 +19,6 @@
 		"fahn/core-fahndung": "@dev",
 		"fahn-core/site-package": "*",
 		"friendsoftypo3/headless": "^4.0",
-		"lcobucci/jwt": "^5.0",
 		"typo3/cms-backend": "^13.4",
 		"typo3/cms-belog": "^13.4",
 		"typo3/cms-beuser": "^13.4",
