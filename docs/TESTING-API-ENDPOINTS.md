@@ -81,3 +81,4 @@ Falls weiterhin Probleme bestehen:
 2. **TypoScript-Objekt-Browser** im Backend nutzen
 3. **Template-Analyse** im Backend durchführen
 
+

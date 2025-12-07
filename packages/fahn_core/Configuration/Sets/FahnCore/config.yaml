@@ -6,3 +6,4 @@ imports:
   - { resource: "EXT:fahn_core/Configuration/TypoScript/constants.typoscript" }
   - { resource: "EXT:fahn_core/Configuration/TypoScript/setup.typoscript" }
 
+

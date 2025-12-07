@@ -162,3 +162,4 @@ Bei anhaltenden Problemen:
 2. Extension Manager Screenshot erstellen
 3. Test-Script Output speichern: `./scripts/test_api_endpoints.sh > test_output.txt`
 
+

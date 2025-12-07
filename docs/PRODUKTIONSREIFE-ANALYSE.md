@@ -200,3 +200,4 @@ Das `Fahndung` Domain Model ist **produktionsreif**:
 
 **Nächste Schritte**: Implementierung der fehlenden Komponenten gemäß Berichtsspezifikation.
 
+

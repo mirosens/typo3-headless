@@ -6,3 +6,4 @@
 # In Production: https://fahndung.polizei-bw.de
 fahn.api.corsOrigin = http://localhost:3000
 
+
