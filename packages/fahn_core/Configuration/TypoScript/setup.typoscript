@@ -58,11 +58,43 @@ page {
     # ==================================================================
     # Dispatcher-Mechanismus (Routing)
     # ==================================================================
+    # Verwende COA, um beide API-Endpunkte zu unterstützen
     10 = COA
     10 {
-        # 1. Dispatcher für Fahndung API
+        # 1. Dispatcher für Login API (wird zuerst geprüft)
         10 = CASE
         10 {
+            key.data = GP:tx_fahncore_login|action
+            
+            login = USER
+            login {
+                userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+                extensionName = FahnCore
+                pluginName = Login
+                vendorName = Fahn
+                controller = Login
+                action = login
+                features.skipDefaultArguments = 1
+            }
+            
+            session = USER
+            session <.login
+            session.action = session
+            
+            logout = USER
+            logout <.login
+            logout.action = logout
+            
+            # Fallback: Leerer String wenn kein Match
+            default = TEXT
+            default.value =
+        }
+        # Bedingung: Dieser Block läuft nur, wenn der Namespace präsent ist
+        10.if.isTrue.data = GP:tx_fahncore_login|action
+        
+        # 2. Dispatcher für Fahndung API (wird als zweites geprüft)
+        20 = CASE
+        20 {
             # Der Switch-Key ist der Action-Parameter im Request
             key.data = GP:tx_fahncorefahndung_api|action
             
@@ -97,35 +129,16 @@ page {
             delete = USER
             delete <.list
             delete.action = delete
+            
+            # Fallback: Leerer String wenn kein Match
+            default = TEXT
+            default.value =
         }
-        
-        # 2. Dispatcher für Login API
-        20 = CASE
-        20 {
-            key.data = GP:tx_fahncore_login|action
-            
-            login = USER
-            login {
-                userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
-                extensionName = FahnCore
-                pluginName = Login
-                vendorName = Fahn
-                controller = Login
-                action = login
-                features.skipDefaultArguments = 1
-            }
-            
-            session = USER
-            session <.login
-            session.action = session
-            
-            logout = USER
-            logout <.login
-            logout.action = logout
-        }
+        # Bedingung: Dieser Block läuft nur, wenn der Namespace präsent ist
+        20.if.isTrue.data = GP:tx_fahncorefahndung_api|action
     }
     
-    # Fallback für ungültige Requests (Standardtext statt HTML-Fehlerseite)
+    # Fallback für ungültige Requests (nur wenn beide CASE leer sind)
     10.stdWrap.ifEmpty.cObject = TEXT
     10.stdWrap.ifEmpty.cObject.value = {"error": "No valid action specified"}
 }

@@ -56,13 +56,9 @@ class LoginController extends ActionController
             ];
 
             // Wir initialisieren den Auth-Prozess manuell, um volle Kontrolle zu haben
-            // Verwende TSFE->fe_user falls verfügbar, sonst neue Instanz
-            if (isset($GLOBALS['TSFE']) && $GLOBALS['TSFE']->fe_user instanceof FrontendUserAuthentication) {
-                $feUser = $GLOBALS['TSFE']->fe_user;
-            } else {
-                $feUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
-                $feUser->start();
-            }
+            // Erstelle immer eine neue Instanz für Login (TYPO3 v13 kompatibel)
+            $feUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
+            $feUser->start();
             $feUser->checkPid = false; // User überall finden
             $info = $feUser->getAuthInfoArray();
             $user = $feUser->fetchUserRecord($info['db_user'], $loginData['uname']);
@@ -117,20 +113,15 @@ class LoginController extends ActionController
     public function sessionAction(): ResponseInterface
     {
         try {
-            // Verwende TSFE->fe_user falls verfügbar, sonst Context API
+            // Verwende Context API (TYPO3 v13 kompatibel)
             $user = null;
-            if (isset($GLOBALS['TSFE']) && $GLOBALS['TSFE']->fe_user instanceof FrontendUserAuthentication) {
-                $feUser = $GLOBALS['TSFE']->fe_user;
-                $user = $feUser->user ?? null;
-            } else {
-                $isLoggedIn = $this->context->getPropertyFromAspect('frontend.user', 'isLoggedIn', false);
-                if ($isLoggedIn) {
-                    $userUid = $this->context->getPropertyFromAspect('frontend.user', 'id', 0);
-                    if ($userUid > 0) {
-                        $feUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
-                        $feUser->start();
-                        $user = $feUser->user ?? null;
-                    }
+            $isLoggedIn = $this->context->getPropertyFromAspect('frontend.user', 'isLoggedIn', false);
+            if ($isLoggedIn) {
+                $userUid = $this->context->getPropertyFromAspect('frontend.user', 'id', 0);
+                if ($userUid > 0) {
+                    $feUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
+                    $feUser->start();
+                    $user = $feUser->user ?? null;
                 }
             }
 
@@ -167,13 +158,9 @@ class LoginController extends ActionController
      */
     public function logoutAction(): ResponseInterface
     {
-        // Invalidiert Session in DB und löscht Cookie
-        if (isset($GLOBALS['TSFE']) && $GLOBALS['TSFE']->fe_user instanceof FrontendUserAuthentication) {
-            $feUser = $GLOBALS['TSFE']->fe_user;
-        } else {
-            $feUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
-            $feUser->start();
-        }
+        // Invalidiert Session in DB und löscht Cookie (TYPO3 v13 kompatibel)
+        $feUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
+        $feUser->start();
         $feUser->logoff();
         
         // 204 No Content für Logout (kein Body nötig)
