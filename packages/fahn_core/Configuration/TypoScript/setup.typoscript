@@ -1,42 +1,89 @@
 # ==================================================================
-# PRODUKTIONSREIFE KONFIGURATION: Standard-PAGE für Headless
+# PHASE C2: Minimalistische JSON-API-Konfiguration
 # ==================================================================
-# HINWEIS: In strict headless mode (headless: 1), we use the default headless page template
-# The headless extension provides lib.headlessPage which is the correct base
+# Diese Konfiguration ersetzt die Standard-Page-Konfiguration
+# für die Controller-basierte REST-API
 
-# Use the headless extension's default page configuration
-page < lib.headlessPage
+page = PAGE
 page {
-    10 = JSON
+    typeNum = 0
+    config {
+        disableAllHeaderCode = 1
+        no_cache = 0
+        cache_period = 300
+        sendCacheHeaders = 1
+        additionalHeaders.10.header = Content-Type: application/json; charset=utf-8
+        # CORS- und Sicherheits-Header
+        additionalHeaders.20.header = Access-Control-Allow-Origin: {$fahn.api.corsOrigin}
+        additionalHeaders.30.header = Access-Control-Allow-Credentials: true
+        additionalHeaders.40.header = Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+        additionalHeaders.50.header = Access-Control-Allow-Headers: Content-Type, Authorization
+        additionalHeaders.60.header = X-Content-Type-Options: nosniff
+        additionalHeaders.70.header = X-Frame-Options: SAMEORIGIN
+        additionalHeaders.80.header = Referrer-Policy: strict-origin-when-cross-origin
+    }
+
+    10 = COA
     10 {
-        fields {
-            # Simple test content first
-            test = TEXT
-            test.value = Hello World from Headless TYPO3
-            
-            # Page info
-            page = JSON
-            page {
-                fields {
-                    id = TEXT
-                    id.data = TSFE:id
-                    
-                    title = TEXT
-                    title.field = title
-                }
+        # Router: Dispatch für Fahndung API
+        10 = CASE
+        10 {
+            key.data = GP:tx_fahncorefahndung_api|action
+
+            list = USER
+            list {
+                userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+                extensionName = FahnCoreFahndung
+                pluginName = Api
+                vendorName = Fahn
+                controller = Fahndung
+                action = list
             }
-            
-            # Content elements
-            content = CONTENT_JSON
-            content {
-                table = tt_content
-                select {
-                    orderBy = sorting
-                    where = {#colPos}=0
-                    languageField = sys_language_uid
-                }
-            }
+
+            show = USER
+            show < list
+            show.action = show
+
+            create = USER
+            create < list
+            create.action = create
+
+            update = USER
+            update < list
+            update.action = update
+
+            delete = USER
+            delete < list
+            delete.action = delete
         }
+
+        # Router: Dispatch für Login API
+        20 = CASE
+        20 {
+            key.data = GP:tx_fahncore_login|action
+
+            login = USER
+            login {
+                userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+                extensionName = FahnCore
+                pluginName = Login
+                vendorName = Fahn
+                controller = Login
+                action = login
+            }
+
+            session = USER
+            session < login
+            session.action = session
+
+            logout = USER
+            logout < login
+            logout.action = logout
+        }
+
+        # Fallback bei unbekannter Action
+        default = TEXT
+        default.value = {"error": "Invalid action or endpoint"}
     }
 }
 

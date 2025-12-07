@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vendor\FahnCore\Tests\Unit\Middleware;
+namespace Fahn\Core\Tests\Unit\Middleware;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -10,7 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Core\Http\Response;
-use Vendor\FahnCore\Middleware\CorsMiddleware;
+use Fahn\Core\Middleware\CorsMiddleware;
 
 /**
  * Unit Test für CorsMiddleware

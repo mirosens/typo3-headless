@@ -1,6 +1,6 @@
 <?php
 
-namespace Vendor\FahnCore\Middleware;
+namespace Fahn\Core\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

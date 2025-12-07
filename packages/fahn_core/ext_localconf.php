@@ -36,3 +36,22 @@ if (class_exists(\TYPO3\CMS\Core\Log\LogLevel::class)) {
     }
 }
 
+// Plugin-Registrierung für Login-Controller (Phase C2)
+call_user_func(function () {
+    // Registrierung des Login‑Plugins
+    \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+        'FahnCore',
+        'Login',
+        [\Fahn\Core\Controller\LoginController::class => 'login, session, logout'],
+        [\Fahn\Core\Controller\LoginController::class => 'login, session, logout']
+    );
+
+    // Cache‑Registrierung für Rate Limiting (Login‑Versuche)
+    if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['fahn_core_login'])) {
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['fahn_core_login'] = [
+            'backend' => \TYPO3\CMS\Core\Cache\Backend\SimpleFileBackend::class,
+            'options' => [],
+        ];
+    }
+});
+

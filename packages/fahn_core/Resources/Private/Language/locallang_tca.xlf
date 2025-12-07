@@ -11,7 +11,7 @@
                 <source>Bild ist rein dekorativ</source>
             </trans-unit>
             <trans-unit id="sys_file_reference.tx_is_decorative.description">
-                <source>Aktivieren, wenn das Bild keine inhaltliche Bedeutung hat (z.&nbsp;B. abstrakte Hintergründe, rein dekorative Elemente). Bei aktivierter Option wird das Alt-Text-Feld ausgeblendet.</source>
+                <source>Aktivieren, wenn das Bild keine inhaltliche Bedeutung hat (z.&#160;B. abstrakte Hintergründe, rein dekorative Elemente). Bei aktivierter Option wird das Alt-Text-Feld ausgeblendet.</source>
             </trans-unit>
             <trans-unit id="sys_file_reference.alternative.description">
                 <source>Beschreiben Sie den Inhalt des Bildes für blinde und sehbehinderte Nutzer. Beispiel: "Eine Person, frontal, neutraler Gesichtsausdruck" oder "Tatortfoto: Straßenszene mit Polizeiabsperrung". Lassen Sie das Feld nur leer, wenn "Bild ist rein dekorativ" aktiviert ist.</source>
