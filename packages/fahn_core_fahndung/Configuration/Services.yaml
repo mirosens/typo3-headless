@@ -1,0 +1,19 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  # Extbase Controller müssen explizit als Services registriert werden (TYPO3 v13)
+  Fahn\CoreFahndung\Controller\FahndungController:
+    public: true
+    tags:
+      - name: extbase.controller
+        extensionName: FahnCoreFahndung
+        pluginName: Api
+
+  # Extbase Repository muss explizit als Service registriert werden (TYPO3 v13)
+  Fahn\CoreFahndung\Domain\Repository\FahndungRepository:
+    public: true
+    tags:
+      - name: extbase.repository
+

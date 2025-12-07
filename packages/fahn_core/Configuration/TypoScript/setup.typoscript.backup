@@ -1,46 +1,217 @@
 # ==================================================================
-# PRODUKTIONSREIFE KONFIGURATION: Standard-PAGE für Headless
+# FAHN-CORE Production API Configuration
+# Package: packages/fahn_core
+# File: Configuration/TypoScript/setup.typoscript
 # ==================================================================
-# HINWEIS: In strict headless mode (headless: 1), we use the default headless page template
-# The headless extension provides lib.headlessPage which is the correct base
+# Diese Konfiguration implementiert eine produktionsreife API-Architektur
+# mit TypoScript-basiertem Routing und cHash-Remediation
+# ==================================================================
 
-# Use the headless extension's default page configuration
-page < lib.headlessPage
-page {
-    10 = JSON
-    10 {
-        fields {
-            # Simple test content first
-            test = TEXT
-            test.value = Hello World from Headless TYPO3
-            
-            # Page info
-            page = JSON
-            page {
-                fields {
-                    id = TEXT
-                    id.data = TSFE:id
-                    
-                    title = TEXT
-                    title.field = title
-                }
-            }
-            
-            # Content elements
-            content = CONTENT_JSON
-            content {
-                table = tt_content
-                select {
-                    orderBy = sorting
-                    where = {#colPos}=0
-                    languageField = sys_language_uid
-                }
-            }
-        }
+# ==================================================================
+# Plugin-Definitionen (USER-Objekte für flexibles Routing)
+# ==================================================================
+
+# ------------------------------------------
+# Plugin: Fahndung API
+# ------------------------------------------
+plugin.tx_fahncorefahndung_api = USER
+plugin.tx_fahncorefahndung_api {
+    # Manueller Bootstrap des Extbase-Frameworks
+    userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+    extensionName = FahnCoreFahndung
+    pluginName = Api
+    vendorName = Fahn
+    controller = Fahndung
+    
+    # FEATURE TOGGLE: cHash Resolution Strategy
+    # Durch das Überspringen der Default-Argumente in der Link-Generierung
+    # und URL-Auflösung verhindern wir Redundanzen, die den Hash ungültig machen.
+    features {
+        skipDefaultArguments = 1
+    }
+    
+    # Fallback-Strategie für Robustheit
+    mvc {
+        callDefaultActionIfActionCantBeResolved = 1
     }
 }
 
+# ------------------------------------------
+# Plugin: Login API
+# ------------------------------------------
+plugin.tx_fahncore_login = USER
+plugin.tx_fahncore_login {
+    userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+    extensionName = FahnCore
+    pluginName = Login
+    vendorName = Fahn
+    controller = Login
+    
+    features {
+        skipDefaultArguments = 1
+    }
+    
+    mvc {
+        callDefaultActionIfActionCantBeResolved = 1
+    }
+}
+
+# ==================================================================
+# API Router Logic (CASE Dispatcher)
+# ==================================================================
+lib.fahn_core_api_router = COA
+lib.fahn_core_api_router {
+    # --------------------------------------
+    # Route 1: Fahndung Controller Dispatcher
+    # --------------------------------------
+    10 = CASE
+    10 {
+        # Der Key ist der 'action'-Parameter im Plugin-Namespace
+        key.data = GP:tx_fahncorefahndung_api|action
+
+        # Mapping: action=list -> Fahndung->listAction()
+        list = USER
+        list < plugin.tx_fahncorefahndung_api
+        list.action = list
+
+        # Mapping: action=show -> Fahndung->showAction()
+        show = USER
+        show < plugin.tx_fahncorefahndung_api
+        show.action = show
+
+        # Mapping: action=create -> Fahndung->createAction()
+        create = USER
+        create < plugin.tx_fahncorefahndung_api
+        create.action = create
+
+        # Mapping: action=update -> Fahndung->updateAction()
+        update = USER
+        update < plugin.tx_fahncorefahndung_api
+        update.action = update
+
+        # Mapping: action=delete -> Fahndung->deleteAction()
+        delete = USER
+        delete < plugin.tx_fahncorefahndung_api
+        delete.action = delete
+        
+        # Default: Fehler-JSON bei unbekannter Action
+        default = TEXT
+        default.value = {"error": "Invalid action or endpoint not found"}
+        
+        # Bedingung: Dieser Block läuft nur, wenn der Namespace präsent ist
+        if.isTrue.data = GP:tx_fahncorefahndung_api
+    }
+
+    # --------------------------------------
+    # Route 2: Login Controller Dispatcher
+    # --------------------------------------
+    20 = CASE
+    20 {
+        key.data = GP:tx_fahncore_login|action
+
+        login = USER
+        login < plugin.tx_fahncore_login
+        login.action = login
+
+        session = USER
+        session < plugin.tx_fahncore_login
+        session.action = session
+
+        logout = USER
+        logout < plugin.tx_fahncore_login
+        logout.action = logout
+        
+        default = TEXT
+        default.value = {"error": "Invalid action or endpoint not found"}
+        
+        if.isTrue.data = GP:tx_fahncore_login
+    }
+}
+
+# ==================================================================
+# Page-Konfiguration (nur aktiv wenn API-Parameter vorhanden)
+# ==================================================================
+# Überschreibe die Standard-Page-Konfiguration nur wenn API-Parameter vorhanden sind
+[globalVar = GP:tx_fahncore_login|action != ""] || [globalVar = GP:tx_fahncorefahndung_api|action != ""]
+    page = PAGE
+    page {
+        typeNum = 0
+
+        config {
+            # ------------------------------------------
+            # Rendering-Basis
+            # ------------------------------------------
+            # Deaktiviert <head>, <body>, CSS, JS Inklusionen komplett.
+            # Das Resultat ist ein leerer Buffer, den wir mit JSON füllen.
+            disableAllHeaderCode = 1
+
+            # Caching-Strategie 
+            # Wir aktivieren den Cache (no_cache = 0), steuern ihn aber granular.
+            # Ein generelles Abschalten würde die Performance massiv gefährden.
+            no_cache = 0
+            
+            # Cache-Lebensdauer: 5 Minuten (300 Sekunden).
+            # Dies ist ein Kompromiss aus Aktualität und Entlastung der Datenbank.
+            cache_period = 300
+            
+            # Wichtig für Next.js ISR (Incremental Static Regeneration):
+            # Sendet Last-Modified und ETag Header.
+            sendCacheHeaders = 1
+
+            # ------------------------------------------
+            # Lokalisierung
+            # ------------------------------------------
+            language = de
+            locale_all = de_DE.UTF-8
+            htmlTag_langKey = de
+
+            # ------------------------------------------
+            # Security Headers (Hardening)
+            # ------------------------------------------
+            additionalHeaders {
+                # 1. Content-Type Sniffing Schutz
+                10.header = X-Content-Type-Options: nosniff
+                
+                # 2. Clickjacking Schutz (Verhindert Einbetten in iFrames)
+                20.header = X-Frame-Options: SAMEORIGIN
+                
+                # 3. XSS Filter für ältere Browser
+                30.header = X-XSS-Protection: 1; mode=block
+                
+                # 4. Referrer Policy für Datenschutz
+                40.header = Referrer-Policy: strict-origin-when-cross-origin
+
+                # ------------------------------------------
+                # CORS Konfiguration (Cross-Origin Resource Sharing)
+                # ------------------------------------------
+                # Der Origin wird dynamisch aus Konstanten geladen, um
+                # zwischen Dev (localhost) und Prod (polizei-bw.de) zu unterscheiden.
+                50.header = Access-Control-Allow-Origin: {$fahn.api.corsOrigin}
+                
+                # KRITISCH: Erlaubt das Senden von Cookies (fe_typo_user).
+                # Ohne diesen Header schlägt die Session-Auth fehl.
+                60.header = Access-Control-Allow-Credentials: true
+                
+                # Erlaubte Methoden
+                70.header = Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+                
+                # Erlaubte Header im Request
+                80.header = Access-Control-Allow-Headers: Content-Type, Authorization
+                
+                # Content-Type für JSON
+                90.header = Content-Type: application/json; charset=utf-8
+            }
+        }
+
+        # API-Router wird direkt verwendet
+        # OPTIONS-Requests werden bereits von CorsMiddleware behandelt
+        10 < lib.fahn_core_api_router
+    }
+[global]
+
+# ==================================================================
 # PRODUKTIONSREIFE KONFIGURATION: lib.page für explizite JSON-Struktur
+# ==================================================================
 # This follows the headless extension's expected structure
 lib.page = JSON
 lib.page {
@@ -79,7 +250,7 @@ lib.page {
 }
 
 # ==================================================================
-# API Libraries for FAHN CORE (A.11)
+# API Libraries for FAHN CORE
 # ==================================================================
 
 # Library for Navigation JSON
@@ -174,15 +345,11 @@ lib.fahndung_detail {
     item.wrap = |
 }
 
+# ==================================================================
+# API Endpunkte für Headless JSON-Ausgabe (typeNum-basiert)
+# ==================================================================
 
-# ==================================================================
-# API Endpunkte für Headless JSON-Ausgabe
-# ==================================================================
-
-# ==================================================================
-# PRODUKTIONSREIFE KONFIGURATION: Seiten-JSON (typeNum 834)
-# ==================================================================
-# Direct PAGE configuration to avoid inheritance conflicts
+# PRODUKTIONSREIFE KONFIGURATION: Seiten-JSON (typeNum 9999)
 page_api = PAGE
 page_api {
     typeNum = 9999
@@ -202,7 +369,7 @@ page_api {
         fields {
             # Test field to verify it's working
             test = TEXT
-            test.value = API Route Working via type=834
+            test.value = API Route Working via type=9999
             
             # Page info
             page = JSON
@@ -230,7 +397,7 @@ page_api {
     }
 }
 
-# A.3.3.2: Navigations-JSON (typeNum 835)
+# Navigations-JSON (typeNum 835)
 navigation_api = PAGE
 navigation_api {
     typeNum = 835
@@ -249,7 +416,7 @@ navigation_api {
     10 < lib.navigation
 }
 
-# A.3.3.3: Fahndungen-Liste (typeNum 836)
+# Fahndungen-Liste (typeNum 836)
 fahndungen_list_api = PAGE
 fahndungen_list_api {
     typeNum = 836
@@ -269,7 +436,7 @@ fahndungen_list_api {
     10 < lib.fahndungen_list
 }
 
-# A.3.3.3: Fahndung-Detail (typeNum 837)
+# Fahndung-Detail (typeNum 837)
 fahndung_detail_api = PAGE
 fahndung_detail_api {
     typeNum = 837
@@ -288,7 +455,7 @@ fahndung_detail_api {
     10 < lib.fahndung_detail
 }
 
-# A.11: JSON 404 Not Found (typeNum 838)
+# JSON 404 Not Found (typeNum 838)
 json_404_api = PAGE
 json_404_api {
     typeNum = 838
@@ -305,9 +472,7 @@ json_404_api {
     10.wrap = |
 }
 
-# ==================================================================
 # PRODUKTIONSREIFE KONFIGURATION: Fahndungen-Liste API (typeNum 10000)
-# ==================================================================
 page_fahndungen_list = PAGE
 page_fahndungen_list {
     typeNum = 10000
@@ -349,9 +514,7 @@ page_fahndungen_list {
     }
 }
 
-# ==================================================================
-# PRODUKTIONSREIFE KONFIGURATION: Health Check API (typeNum 8999)
-# ==================================================================
+# Health Check API (typeNum 8999)
 health_check_api = PAGE
 health_check_api {
     typeNum = 8999

@@ -19,7 +19,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Vendor\\FahnCore\\": "Classes/"
+            "Vendor\\FahnCore\\": "Classes/",
+            "Fahn\\Core\\": "Classes/"
         }
     },
     "autoload-dev": {

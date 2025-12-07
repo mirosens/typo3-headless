@@ -53,5 +53,26 @@ call_user_func(function () {
             'options' => [],
         ];
     }
-});
 
+    // Automatische TypoScript-Einbindung für Root-Templates (Phase C3)
+    // Dies stellt sicher, dass die API-Konfiguration immer geladen wird
+    // Registriere DataHandler-Hook für automatische Einbindung beim Speichern von Templates
+    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] = 
+        \Vendor\FahnCore\Hooks\TypoScriptHook::class;
+
+    // cHash-Ausnahmen für API-Parameter (Phase 2.5)
+    // Verhindert "cHash empty" Fehler bei API-Requests
+    if (!isset($GLOBALS['TYPO3_CONF_VARS']['FE']['cacheHash']['excludedParameters'])) {
+        $GLOBALS['TYPO3_CONF_VARS']['FE']['cacheHash']['excludedParameters'] = [];
+    }
+    $excludedParams = [
+        'tx_fahncore_login[action]',
+        'tx_fahncorefahndung_api[action]',
+        'tx_fahncore_login',
+        'tx_fahncorefahndung_api',
+    ];
+    $GLOBALS['TYPO3_CONF_VARS']['FE']['cacheHash']['excludedParameters'] = array_merge(
+        $GLOBALS['TYPO3_CONF_VARS']['FE']['cacheHash']['excludedParameters'],
+        $excludedParams
+    );
+});

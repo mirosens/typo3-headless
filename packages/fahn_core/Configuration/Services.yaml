@@ -18,3 +18,15 @@ services:
         command: 'fahn-core:accessibility:audit'
         description: 'Prüft alle Bildreferenzen auf WCAG 2.2-konforme Alt-Texte'
 
+  # Automatische TypoScript-Einbindung für Root-Templates
+  Vendor\FahnCore\Hooks\TypoScriptHook:
+    public: true
+
+  # Extbase Controller müssen explizit als Services registriert werden (TYPO3 v13)
+  Fahn\Core\Controller\LoginController:
+    public: true
+    tags:
+      - name: extbase.controller
+        extensionName: FahnCore
+        pluginName: Login
+

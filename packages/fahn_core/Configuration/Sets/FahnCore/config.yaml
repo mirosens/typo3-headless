@@ -1,0 +1,8 @@
+name: fahn_core/api
+label: FAHN CORE API Configuration
+
+# TYPO3 v13 Sets benötigen explizite Imports
+imports:
+  - { resource: "EXT:fahn_core/Configuration/TypoScript/constants.typoscript" }
+  - { resource: "EXT:fahn_core/Configuration/TypoScript/setup.typoscript" }
+

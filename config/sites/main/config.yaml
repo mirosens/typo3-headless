@@ -3,6 +3,8 @@ dependencies:
   - friendsoftypo3/headless
 frontendBase: ''
 headless: 1
+typoScriptSets:
+  - fahn_core/api
 languages:
   - 
     title: English

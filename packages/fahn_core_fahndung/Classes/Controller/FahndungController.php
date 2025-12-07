@@ -73,7 +73,7 @@ class FahndungController extends ActionController
                 $items[] = $this->serializeFahndung($fahndung);
             }
 
-            return $this->jsonResponse([
+            return $this->jsonResponseWithData([
                 'success' => true,
                 'data' => $items,
                 'pagination' => [
@@ -87,7 +87,7 @@ class FahndungController extends ActionController
         } catch (\Exception $e) {
             // Security: Niemals interne Exception-Details an die API ausgeben.
             $this->logger->error('Fahndung list failed', ['error' => $e->getMessage()]);
-            return $this->jsonResponse(['error' => 'Internal Server Error'], 500);
+            return $this->jsonResponseWithData(['error' => 'Internal Server Error'], 500);
         }
     }
 
@@ -103,17 +103,17 @@ class FahndungController extends ActionController
 
             // Prüfung auf Existenz UND Veröffentlichungsstatus
             if (!$fahndung || !$fahndung->getIsPublished()) {
-                return $this->jsonResponse(['error' => 'Fahndung not found'], 404);
+                return $this->jsonResponseWithData(['error' => 'Fahndung not found'], 404);
             }
 
-            return $this->jsonResponse([
+            return $this->jsonResponseWithData([
                 'success' => true,
                 'data' => $this->serializeFahndung($fahndung, true),
             ]);
 
         } catch (\Exception $e) {
             $this->logger->error('Fahndung show failed', ['uid' => $uid ?? 0, 'error' => $e->getMessage()]);
-            return $this->jsonResponse(['error' => 'Internal Server Error'], 500);
+            return $this->jsonResponseWithData(['error' => 'Internal Server Error'], 500);
         }
     }
 
@@ -125,7 +125,7 @@ class FahndungController extends ActionController
     {
         // Auth Check vor jeglicher Verarbeitung
         if (!$this->isUserLoggedIn()) {
-            return $this->jsonResponse(['error' => 'Unauthorized'], 401);
+            return $this->jsonResponseWithData(['error' => 'Unauthorized'], 401);
         }
 
         try {
@@ -134,10 +134,10 @@ class FahndungController extends ActionController
 
             // 1. Validierung
             if (empty($data['title']) || strlen($data['title']) < 3) {
-                return $this->jsonResponse(['error' => 'Title must be at least 3 characters'], 400);
+                return $this->jsonResponseWithData(['error' => 'Title must be at least 3 characters'], 400);
             }
             if (empty($data['description'])) {
-                return $this->jsonResponse(['error' => 'Description is required'], 400);
+                return $this->jsonResponseWithData(['error' => 'Description is required'], 400);
             }
 
             // 2. Erstellung und XSS-Prävention
@@ -158,14 +158,14 @@ class FahndungController extends ActionController
 
             $this->logger->info('Fahndung created', ['uid' => $fahndung->getUid()]);
 
-            return $this->jsonResponse([
+            return $this->jsonResponseWithData([
                 'success' => true,
                 'data' => $this->serializeFahndung($fahndung)
             ], 201); // 201 Created
 
         } catch (\Exception $e) {
             $this->logger->error('Fahndung create failed', ['error' => $e->getMessage()]);
-            return $this->jsonResponse(['error' => 'Internal Server Error'], 500);
+            return $this->jsonResponseWithData(['error' => 'Internal Server Error'], 500);
         }
     }
 
@@ -176,7 +176,7 @@ class FahndungController extends ActionController
     public function updateAction(): ResponseInterface
     {
         if (!$this->isUserLoggedIn()) {
-            return $this->jsonResponse(['error' => 'Unauthorized'], 401);
+            return $this->jsonResponseWithData(['error' => 'Unauthorized'], 401);
         }
 
         try {
@@ -184,7 +184,7 @@ class FahndungController extends ActionController
             $fahndung = $this->fahndungRepository->findByUid($uid);
 
             if (!$fahndung) {
-                return $this->jsonResponse(['error' => 'Fahndung not found'], 404);
+                return $this->jsonResponseWithData(['error' => 'Fahndung not found'], 404);
             }
 
             $rawBody = $this->request->getBody()->getContents();
@@ -215,14 +215,14 @@ class FahndungController extends ActionController
 
             $this->logger->info('Fahndung updated', ['uid' => $uid]);
 
-            return $this->jsonResponse([
+            return $this->jsonResponseWithData([
                 'success' => true,
                 'data' => $this->serializeFahndung($fahndung)
             ]);
 
         } catch (\Exception $e) {
             $this->logger->error('Fahndung update failed', ['error' => $e->getMessage()]);
-            return $this->jsonResponse(['error' => 'Internal Server Error'], 500);
+            return $this->jsonResponseWithData(['error' => 'Internal Server Error'], 500);
         }
     }
 
@@ -233,7 +233,7 @@ class FahndungController extends ActionController
     public function deleteAction(): ResponseInterface
     {
         if (!$this->isUserLoggedIn()) {
-            return $this->jsonResponse(['error' => 'Unauthorized'], 401);
+            return $this->jsonResponseWithData(['error' => 'Unauthorized'], 401);
         }
 
         try {
@@ -241,7 +241,7 @@ class FahndungController extends ActionController
             $fahndung = $this->fahndungRepository->findByUid($uid);
 
             if (!$fahndung) {
-                return $this->jsonResponse(['error' => 'Fahndung not found'], 404);
+                return $this->jsonResponseWithData(['error' => 'Fahndung not found'], 404);
             }
 
             $this->fahndungRepository->remove($fahndung);
@@ -249,11 +249,11 @@ class FahndungController extends ActionController
 
             $this->logger->info('Fahndung deleted', ['uid' => $uid]);
 
-            return $this->jsonResponse(['success' => true]);
+            return $this->jsonResponseWithData(['success' => true]);
 
         } catch (\Exception $e) {
             $this->logger->error('Fahndung delete failed', ['error' => $e->getMessage()]);
-            return $this->jsonResponse(['error' => 'Internal Server Error'], 500);
+            return $this->jsonResponseWithData(['error' => 'Internal Server Error'], 500);
         }
     }
 
@@ -311,7 +311,7 @@ class FahndungController extends ActionController
     /**
      * Standardisierte JSON-Antwort mit CORS-Headern.
      */
-    private function jsonResponse(array $data, int $status = 200): ResponseInterface
+    protected function jsonResponseWithData(array $data, int $status = 200): ResponseInterface
     {
         $this->response->setStatus($status);
         $this->response->setHeader('Content-Type', 'application/json; charset=utf-8');

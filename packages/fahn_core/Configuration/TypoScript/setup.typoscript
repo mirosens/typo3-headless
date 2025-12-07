@@ -1,35 +1,72 @@
 # ==================================================================
-# PHASE C2: Minimalistische JSON-API-Konfiguration
+# FAHN-CORE Phase 2.7: Minimal Viable Integration (MVI)
+# Package: packages/fahn_core
+# File: Configuration/TypoScript/setup.typoscript
 # ==================================================================
-# Diese Konfiguration ersetzt die Standard-Page-Konfiguration
-# für die Controller-basierte REST-API
+# Diese Konfiguration implementiert eine robuste, standardkonforme
+# JSON-API auf Basis von TYPO3 v13 native Features.
+# 
+# Kernprinzipien:
+# - disableAllHeaderCode = 1 verhindert HTML-Gerüst
+# - CASE-Dispatcher für deterministisches Routing
+# - Session-basierte Authentifizierung (fe_user)
+# - Keine Drittanbieter-Bibliotheken (JWT entfernt)
+# ==================================================================
 
+# ==================================================================
+# PAGE Objekt definieren (typeNum 0 = Standard-Request)
+# ==================================================================
 page = PAGE
 page {
     typeNum = 0
+    
     config {
+        # DEAKTIVIERUNG DES HTML-GERÜSTS - DAS IST DER FIX
+        # Verhindert, dass TYPO3 <html>, <head>, <body> Tags hinzufügt
         disableAllHeaderCode = 1
+        
+        # Caching-Verhalten
         no_cache = 0
         cache_period = 300
         sendCacheHeaders = 1
-        additionalHeaders.10.header = Content-Type: application/json; charset=utf-8
-        # CORS- und Sicherheits-Header
-        additionalHeaders.20.header = Access-Control-Allow-Origin: {$fahn.api.corsOrigin}
-        additionalHeaders.30.header = Access-Control-Allow-Credentials: true
-        additionalHeaders.40.header = Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
-        additionalHeaders.50.header = Access-Control-Allow-Headers: Content-Type, Authorization
-        additionalHeaders.60.header = X-Content-Type-Options: nosniff
-        additionalHeaders.70.header = X-Frame-Options: SAMEORIGIN
-        additionalHeaders.80.header = Referrer-Policy: strict-origin-when-cross-origin
+        
+        # Encoding und Sprache
+        language = de
+        locale_all = de_DE.UTF-8
+        
+        # Debugging deaktivieren (verhindert HTML-Kommentare im JSON)
+        debug = 0
+        
+        # Security Headers (Global)
+        additionalHeaders {
+            10.header = X-Content-Type-Options: nosniff
+            20.header = X-Frame-Options: SAMEORIGIN
+            30.header = X-XSS-Protection: 1; mode=block
+            40.header = Referrer-Policy: strict-origin-when-cross-origin
+            
+            # CORS Headers (Development Setup - muss für Prod angepasst werden)
+            50.header = Access-Control-Allow-Origin: {$fahn.api.corsOrigin}
+            60.header = Access-Control-Allow-Credentials: true
+            70.header = Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+            80.header = Access-Control-Allow-Headers: Content-Type, Authorization
+            
+            # Content-Type für JSON (wird von Controllern überschrieben, aber als Fallback)
+            90.header = Content-Type: application/json; charset=utf-8
+        }
     }
-
+    
+    # ==================================================================
+    # Dispatcher-Mechanismus (Routing)
+    # ==================================================================
     10 = COA
     10 {
-        # Router: Dispatch für Fahndung API
+        # 1. Dispatcher für Fahndung API
         10 = CASE
         10 {
+            # Der Switch-Key ist der Action-Parameter im Request
             key.data = GP:tx_fahncorefahndung_api|action
-
+            
+            # List Action
             list = USER
             list {
                 userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
@@ -38,30 +75,35 @@ page {
                 vendorName = Fahn
                 controller = Fahndung
                 action = list
+                features.skipDefaultArguments = 1
             }
-
+            
+            # Show Action
             show = USER
-            show < list
+            show <.list
             show.action = show
-
+            
+            # Create Action
             create = USER
-            create < list
+            create <.list
             create.action = create
-
+            
+            # Update Action
             update = USER
-            update < list
+            update <.list
             update.action = update
-
+            
+            # Delete Action
             delete = USER
-            delete < list
+            delete <.list
             delete.action = delete
         }
-
-        # Router: Dispatch für Login API
+        
+        # 2. Dispatcher für Login API
         20 = CASE
         20 {
             key.data = GP:tx_fahncore_login|action
-
+            
             login = USER
             login {
                 userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
@@ -70,25 +112,228 @@ page {
                 vendorName = Fahn
                 controller = Login
                 action = login
+                features.skipDefaultArguments = 1
             }
-
+            
             session = USER
-            session < login
+            session <.login
             session.action = session
-
+            
             logout = USER
-            logout < login
+            logout <.login
             logout.action = logout
         }
+    }
+    
+    # Fallback für ungültige Requests (Standardtext statt HTML-Fehlerseite)
+    10.stdWrap.ifEmpty.cObject = TEXT
+    10.stdWrap.ifEmpty.cObject.value = {"error": "No valid action specified"}
+}
 
-        # Fallback bei unbekannter Action
-        default = TEXT
-        default.value = {"error": "Invalid action or endpoint"}
+# ==================================================================
+# Handling von Preflight Requests (OPTIONS)
+# ==================================================================
+# HINWEIS: OPTIONS-Requests werden bereits von der CorsMiddleware
+# (packages/fahn_core/Classes/Middleware/CorsMiddleware.php) behandelt,
+# bevor sie TypoScript erreichen. Die Middleware sendet automatisch
+# einen 204 No Content Response mit allen notwendigen CORS-Headern.
+# Daher ist hier keine TypoScript-Bedingung notwendig.
+
+# ==================================================================
+# Legacy TypeNum-Konfigurationen (für Kompatibilität)
+# ==================================================================
+# Diese werden für bestehende Headless-Integrationen beibehalten,
+# aber die Haupt-API nutzt typeNum 0 mit dem CASE-Dispatcher.
+
+# PRODUKTIONSREIFE KONFIGURATION: Seiten-JSON (typeNum 9999)
+page_api = PAGE
+page_api {
+    typeNum = 9999
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        debug = 0
+        admPanel = 0
+        cache_period = 3600
+        sendCacheHeaders = 1
+    }
+    10 = JSON
+    10 {
+        fields {
+            # Test field to verify it's working
+            test = TEXT
+            test.value = API Route Working via type=9999
+            
+            # Page info
+            page = JSON
+            page {
+                fields {
+                    id = TEXT
+                    id.data = TSFE:id
+                    
+                    title = TEXT
+                    title.field = title
+                }
+            }
+            
+            # Content elements
+            content = CONTENT_JSON
+            content {
+                table = tt_content
+                select {
+                    orderBy = sorting
+                    where = {#colPos}=0
+                    languageField = sys_language_uid
+                }
+            }
+        }
     }
 }
 
+# Navigations-JSON (typeNum 835)
+navigation_api = PAGE
+navigation_api {
+    typeNum = 835
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        sendCacheHeaders = 1
+        debug = 0
+        admPanel = 0
+    }
+    # JSON-Objekt direkt verwenden
+    10 = JSON
+    10 < lib.navigation
+}
+
+# Fahndungen-Liste (typeNum 836)
+fahndungen_list_api = PAGE
+fahndungen_list_api {
+    typeNum = 836
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        no_cache = 1
+        sendCacheHeaders = 1
+        debug = 0
+        admPanel = 0
+    }
+    # JSON-Objekt direkt verwenden
+    10 = JSON
+    10 < lib.fahndungen_list
+}
+
+# Fahndung-Detail (typeNum 837)
+fahndung_detail_api = PAGE
+fahndung_detail_api {
+    typeNum = 837
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        sendCacheHeaders = 1
+        debug = 0
+        admPanel = 0
+    }
+    # JSON-Objekt direkt verwenden
+    10 = JSON
+    10 < lib.fahndung_detail
+}
+
+# JSON 404 Not Found (typeNum 838)
+json_404_api = PAGE
+json_404_api {
+    typeNum = 838
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = HTTP/1.1 404 Not Found
+            replace = 1
+        }
+        additionalHeaders.20.header = Content-Type: application/json
+    }
+    10 = TEXT
+    10.value = {"error": "Not Found", "status": 404}
+    10.wrap = |
+}
+
+# PRODUKTIONSREIFE KONFIGURATION: Fahndungen-Liste API (typeNum 10000)
+page_fahndungen_list = PAGE
+page_fahndungen_list {
+    typeNum = 10000
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        debug = 0
+        admPanel = 0
+        no_cache = 1
+        sendCacheHeaders = 1
+    }
+    10 = JSON
+    10 {
+        fields {
+            meta = JSON
+            meta {
+                fields {
+                    total = TEXT
+                    total.value = 3
+                    # TODO: Später durch echte DB-Query ersetzen
+                    
+                    page = TEXT
+                    page.value = 1
+                    
+                    pageSize = TEXT
+                    pageSize.value = 10
+                    
+                    lastUpdated = TEXT
+                    lastUpdated.data = date:U
+                }
+            }
+            
+            items = TEXT
+            items.value = [{"id": "1", "title": "Vermisste Person: Max Mustermann", "type": "missing_person", "status": "active", "publishedAt": "2025-12-01T10:00:00Z", "slug": "max-mustermann-vermisst", "summary": "Seit 30.11.2025 wird Max Mustermann vermisst. Letzte Sichtung am Hauptbahnhof.", "description": "Seit 30.11.2025 wird Max Mustermann vermisst. Letzte Sichtung am Hauptbahnhof."}, {"id": "2", "title": "Zeugenaufruf: Verkehrsunfall B123", "type": "witness_appeal", "status": "active", "publishedAt": "2025-11-29T14:30:00Z", "slug": "verkehrsunfall-b123-zeugenaufruf", "summary": "Gesucht werden Zeugen eines Verkehrsunfalls auf der B123 am 28.11.2025.", "description": "Gesucht werden Zeugen eines Verkehrsunfalls auf der B123 am 28.11.2025."}, {"id": "3", "title": "Fahndung nach Einbruch in Musterstadt", "type": "wanted", "status": "active", "publishedAt": "2025-11-28T09:15:00Z", "slug": "einbruch-musterstadt-fahndung", "summary": "Nach einem Einbruch in der Musterstraße werden Hinweise zu verdächtigen Personen gesucht.", "description": "Nach einem Einbruch in der Musterstraße werden Hinweise zu verdächtigen Personen gesucht."}]
+        }
+    }
+}
+
+# Health Check API (typeNum 8999)
+health_check_api = PAGE
+health_check_api {
+    typeNum = 8999
+    config {
+        disableAllHeaderCode = 1
+        additionalHeaders.10 {
+            header = Content-Type: application/json; charset=utf-8
+            replace = 1
+        }
+        debug = 0
+        admPanel = 0
+        no_cache = 1
+        sendCacheHeaders = 0
+    }
+    10 = TEXT
+    10.value = {"status":"healthy","timestamp":"1764663250","version":"1.0.0","services":{"typo3":"ok","database":"ok","cache":"ok"}}
+}
+
+# ==================================================================
+# Library-Definitionen für Headless-Kompatibilität
+# ==================================================================
+
 # PRODUKTIONSREIFE KONFIGURATION: lib.page für explizite JSON-Struktur
-# This follows the headless extension's expected structure
 lib.page = JSON
 lib.page {
     fields {
@@ -124,10 +369,6 @@ lib.page {
         }
     }
 }
-
-# ==================================================================
-# API Libraries for FAHN CORE (A.11)
-# ==================================================================
 
 # Library for Navigation JSON
 lib.navigation = JSON
@@ -219,200 +460,4 @@ lib.fahndung_detail {
     item = TEXT
     item.data = TSFE:fahndung
     item.wrap = |
-}
-
-
-# ==================================================================
-# API Endpunkte für Headless JSON-Ausgabe
-# ==================================================================
-
-# ==================================================================
-# PRODUKTIONSREIFE KONFIGURATION: Seiten-JSON (typeNum 834)
-# ==================================================================
-# Direct PAGE configuration to avoid inheritance conflicts
-page_api = PAGE
-page_api {
-    typeNum = 9999
-    config {
-        disableAllHeaderCode = 1
-        additionalHeaders.10 {
-            header = Content-Type: application/json; charset=utf-8
-            replace = 1
-        }
-        debug = 0
-        admPanel = 0
-        cache_period = 3600
-        sendCacheHeaders = 1
-    }
-    10 = JSON
-    10 {
-        fields {
-            # Test field to verify it's working
-            test = TEXT
-            test.value = API Route Working via type=834
-            
-            # Page info
-            page = JSON
-            page {
-                fields {
-                    id = TEXT
-                    id.data = TSFE:id
-                    
-                    title = TEXT
-                    title.field = title
-                }
-            }
-            
-            # Content elements
-            content = CONTENT_JSON
-            content {
-                table = tt_content
-                select {
-                    orderBy = sorting
-                    where = {#colPos}=0
-                    languageField = sys_language_uid
-                }
-            }
-        }
-    }
-}
-
-# A.3.3.2: Navigations-JSON (typeNum 835)
-navigation_api = PAGE
-navigation_api {
-    typeNum = 835
-    config {
-        disableAllHeaderCode = 1
-        additionalHeaders.10 {
-            header = Content-Type: application/json; charset=utf-8
-            replace = 1
-        }
-        sendCacheHeaders = 1
-        debug = 0
-        admPanel = 0
-    }
-    # JSON-Objekt direkt verwenden
-    10 = JSON
-    10 < lib.navigation
-}
-
-# A.3.3.3: Fahndungen-Liste (typeNum 836)
-fahndungen_list_api = PAGE
-fahndungen_list_api {
-    typeNum = 836
-    config {
-        disableAllHeaderCode = 1
-        additionalHeaders.10 {
-            header = Content-Type: application/json; charset=utf-8
-            replace = 1
-        }
-        no_cache = 1
-        sendCacheHeaders = 1
-        debug = 0
-        admPanel = 0
-    }
-    # JSON-Objekt direkt verwenden
-    10 = JSON
-    10 < lib.fahndungen_list
-}
-
-# A.3.3.3: Fahndung-Detail (typeNum 837)
-fahndung_detail_api = PAGE
-fahndung_detail_api {
-    typeNum = 837
-    config {
-        disableAllHeaderCode = 1
-        additionalHeaders.10 {
-            header = Content-Type: application/json; charset=utf-8
-            replace = 1
-        }
-        sendCacheHeaders = 1
-        debug = 0
-        admPanel = 0
-    }
-    # JSON-Objekt direkt verwenden
-    10 = JSON
-    10 < lib.fahndung_detail
-}
-
-# A.11: JSON 404 Not Found (typeNum 838)
-json_404_api = PAGE
-json_404_api {
-    typeNum = 838
-    config {
-        disableAllHeaderCode = 1
-        additionalHeaders.10 {
-            header = HTTP/1.1 404 Not Found
-            replace = 1
-        }
-        additionalHeaders.20.header = Content-Type: application/json
-    }
-    10 = TEXT
-    10.value = {"error": "Not Found", "status": 404}
-    10.wrap = |
-}
-
-# ==================================================================
-# PRODUKTIONSREIFE KONFIGURATION: Fahndungen-Liste API (typeNum 10000)
-# ==================================================================
-page_fahndungen_list = PAGE
-page_fahndungen_list {
-    typeNum = 10000
-    config {
-        disableAllHeaderCode = 1
-        additionalHeaders.10 {
-            header = Content-Type: application/json; charset=utf-8
-            replace = 1
-        }
-        debug = 0
-        admPanel = 0
-        no_cache = 1
-        sendCacheHeaders = 1
-    }
-    10 = JSON
-    10 {
-        fields {
-            meta = JSON
-            meta {
-                fields {
-                    total = TEXT
-                    total.value = 3
-                    # TODO: Später durch echte DB-Query ersetzen
-                    
-                    page = TEXT
-                    page.value = 1
-                    
-                    pageSize = TEXT
-                    pageSize.value = 10
-                    
-                    lastUpdated = TEXT
-                    lastUpdated.data = date:U
-                }
-            }
-            
-            items = TEXT
-            items.value = [{"id": "1", "title": "Vermisste Person: Max Mustermann", "type": "missing_person", "status": "active", "publishedAt": "2025-12-01T10:00:00Z", "slug": "max-mustermann-vermisst", "summary": "Seit 30.11.2025 wird Max Mustermann vermisst. Letzte Sichtung am Hauptbahnhof.", "description": "Seit 30.11.2025 wird Max Mustermann vermisst. Letzte Sichtung am Hauptbahnhof."}, {"id": "2", "title": "Zeugenaufruf: Verkehrsunfall B123", "type": "witness_appeal", "status": "active", "publishedAt": "2025-11-29T14:30:00Z", "slug": "verkehrsunfall-b123-zeugenaufruf", "summary": "Gesucht werden Zeugen eines Verkehrsunfalls auf der B123 am 28.11.2025.", "description": "Gesucht werden Zeugen eines Verkehrsunfalls auf der B123 am 28.11.2025."}, {"id": "3", "title": "Fahndung nach Einbruch in Musterstadt", "type": "wanted", "status": "active", "publishedAt": "2025-11-28T09:15:00Z", "slug": "einbruch-musterstadt-fahndung", "summary": "Nach einem Einbruch in der Musterstraße werden Hinweise zu verdächtigen Personen gesucht.", "description": "Nach einem Einbruch in der Musterstraße werden Hinweise zu verdächtigen Personen gesucht."}]
-        }
-    }
-}
-
-# ==================================================================
-# PRODUKTIONSREIFE KONFIGURATION: Health Check API (typeNum 8999)
-# ==================================================================
-health_check_api = PAGE
-health_check_api {
-    typeNum = 8999
-    config {
-        disableAllHeaderCode = 1
-        additionalHeaders.10 {
-            header = Content-Type: application/json; charset=utf-8
-            replace = 1
-        }
-        debug = 0
-        admPanel = 0
-        no_cache = 1
-        sendCacheHeaders = 0
-    }
-    10 = TEXT
-    10.value = {"status":"healthy","timestamp":"1764663250","version":"1.0.0","services":{"typo3":"ok","database":"ok","cache":"ok"}}
 }
